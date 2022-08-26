@@ -20,11 +20,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         ArrayList<String>().apply {
-            add("view_binding_demo")
+            add("view_binding_demo")// 0
             add("进度的按钮")// 1
             add("横着转圈滚动的List")// 2
             add("输入框")// 3
             add("按钮音效")// 4
+            add("贝瑟尔曲线的图")// 5
             binding.lv.adapter = MListAdapter(this) { position ->
                 when (position) {
                     0 -> goToActivity(ViewBindingActivity::class.java)
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
                     2 -> goToActivity(HorizontalScrollListActivity::class.java)
                     3 -> goToActivity(EditTextActivity::class.java)
                     4 -> goToActivity(SoundPoolActivity::class.java)
+                    5 -> goToActivity(BesselCurveActivity::class.java)
                 }
             }
         }

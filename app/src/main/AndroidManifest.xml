@@ -24,6 +24,7 @@
         <activity android:name=".activity.ViewBindingActivity" />
         <activity android:name=".activity.EditTextActivity" />
         <activity android:name=".activity.SoundPoolActivity" />
+        <activity android:name=".activity.BesselCurveActivity" />
     </application>
 
 </manifest>

@@ -15,4 +15,19 @@
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="chart">
+        <attr name="line_color" format="color" />
+        <attr name="background_color" format="color" />
+        <!--        <attr name="background_line_width" format="dimension" />-->
+        <!--        <attr name="radius" format="dimension" />-->
+        <!--        <attr name="text_size" format="dimension" />-->
+        <!--        <attr name="text_default_color" format="color" />-->
+        <!--        <attr name="text_selector_color" format="color" />-->
+        <!--        <attr name="text_paint_width" format="float" />-->
+        <!--        <attr name="background_is_line">-->
+        <!--            <enum name="yes" value="1" />-->
+        <!--            <enum name="no" value="2" />-->
+        <!--        </attr>-->
+    </declare-styleable>
+
 </resources>

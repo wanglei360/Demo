@@ -55,5 +55,12 @@
     <color name="switch_sel_color">#32CD32</color>
     <color name="switch_def_color">#d8d8d8</color>
 
+    <color name="bessel_from_line">#a9a9a9</color>
+    <color name="bessel_background">#202836</color>
+    <color name="bessel_text">#F4FBFF</color>
+    <color name="bessel_line">#24FBB5</color>
+    <color name="bessel_gradual1">#FF018786</color>
+    <color name="bessel_gradual2">#8015AE9E</color>
+
 
 </resources>
