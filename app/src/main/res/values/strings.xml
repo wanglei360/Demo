@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Demo</string>
+    <string name="net_error_message_something_wrong">数据异常，请重新尝试</string>
+</resources>

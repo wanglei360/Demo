@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+<!--    app:counterOverflowTextAppearance="@style/MyOverflowText"-->
+<!--    app:boxBackgroundColor="@color/line_1966ff"-->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password_input_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:hint="密码"
+        app:endIconMode="password_toggle"
+        app:errorEnabled="true"
+        app:errorTextAppearance="@style/MyErrorText"
+        app:passwordToggleTint="@color/text_1966ff">
+        <!--        passwordToggleTint：输入框光标、线的颜色-->
+        <!--        endIconMode：输入类型-->
+        <!--        errorEnabled、errorTextAppearance一起使用，显示错误时的颜色，否则没有错误提示-->
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_input_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:onClick="btnClick" />
+</LinearLayout>

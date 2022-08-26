@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="background">#ededed</color>
+    <color name="background_blue">#1966ff</color>
+    <color name="background_red">#f75351</color>
+    <color name="background_ffffff">#ffffff</color>
+    <color name="background_f5f5f5">#f5f5f5</color>
+    <color name="background_d8d8d8">#d8d8d8</color>
+    <color name="background_a9a9a9">#a9a9a9</color>
+
+    <color name="color_transparent">#00000000</color>
+    <color name="color_black">#000000</color>
+    <color name="color_grey">#a9a9a9</color>
+    <color name="color_white">#ffffff</color>
+    <color name="color_red">#e64240</color>
+    <color name="color_yellow">#f7d246</color>
+    <color name="color_orange">#ffa500</color>
+    <color name="color_blue">#1966ff</color>
+    <color name="color_green">#008000</color>
+    <color name="color_green1">#40c48c</color>
+
+    <color name="color_caae7e">#caae7e</color>
+
+    <color name="text_000000">#000000</color>
+    <color name="text_606266">#606266</color>
+    <color name="text_7e7e7e">#7e7e7e</color>
+    <color name="text_a9a9a9">#a9a9a9</color>
+    <color name="text_d8d8d8">#d8d8d8</color>
+    <color name="text_e5e5e5">#e5e5e5</color>
+    <color name="text_ffffff">#ffffff</color>
+    <color name="text_FFA500">#ffa500</color>
+    <color name="text_cc0000">#cc0000</color>
+    <color name="text_1966ff">#1966ff</color>ProgressButton
+    <color name="text_2282f9">#2282f9</color>
+    <color name="text_40c5f1">#40c5f1</color>
+    <color name="text_0A5B9B">#0a5b9b</color>
+    <color name="text_008000">#008000</color>
+    <color name="text_hint">#a9a9a9</color>
+    <color name="text_tips">#7e7e7e</color>
+
+    <color name="line">#e5e5e5</color>
+    <color name="line_background">#ededed</color>
+    <color name="line_d8d8d8">#d8d8d8</color>
+    <color name="line_a9a9a9">#a9a9a9</color>
+    <color name="line_1966ff">#1966ff</color>
+
+    <color name="switch_sel_color">#32CD32</color>
+    <color name="switch_def_color">#d8d8d8</color>
+
+
+</resources>

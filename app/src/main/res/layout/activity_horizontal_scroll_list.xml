@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.ntrade.demo.view.scroll_view.MScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:ignore="UselessParent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.ntrade.demo.view.m_view_page.MViewPage
+                android:layout_width="match_parent"
+                android:layout_height="300dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="@color/text_a9a9a9" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="asdfasdfasdfasdfasdfasdfasdfsadfsadfasdfasdfasdfasdfsadfasdfsadfsdfsadfsadfasdf"
+                android:textColor="@android:color/black"
+                android:textSize="100sp" />
+
+        </LinearLayout>
+    </com.ntrade.demo.view.scroll_view.MScrollView>
+</LinearLayout>
