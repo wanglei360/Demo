@@ -1,5 +1,7 @@
-package com.ntrade.demo.view.bessel_curve
+package com.ntrade.demo.view.chart
 
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
@@ -18,49 +20,74 @@ import kotlin.math.roundToInt
 /** * 创建者：leiwu
  * * 时间：2022/8/23 16:26
  * * 类描述：
- * * 修改人：
- * * 修改时间：    private val gestureDetector by lazy { GestureDetectorCompat(context, this) }
- * * 修改备注：GestureDetector.OnGestureListener
+ * * 修改人：curve
+ * * 修改时间：
+ * * 修改备注：
  */
 class MyChartView : View, GestureDetector.OnGestureListener {
     private var isShowSpot = true// 曲线上的点是否显示
-    private var isShowBezierVerticalLine = true//曲线到底的竖线是否显示
-    private var isLeft = false
+    private var isShowBezierCurveLine = true//曲线到底的竖线是否显示
+    private var isLeft = true
     private var isShowGradualBackground = true//是否显示渐变底色
-    private var isCompelCanScroll = false//是否可以滚动,可以在布局中设置的参数
+    private var isCompelCanScroll = true//是否可以滚动,可以在布局中设置的参数
+    private var isShowAnim = true//是否展示动画
+    private var spotRadius = 10f//圆点的半径
+    private var numberInWindow = 8//一个屏幕中可以分几分
+    private var mBackgroundColor = 0//底色
+
     private var startX = 0f//图表的的起始X坐标
     private var startY = 0f//图表的的起始Y坐标
-    private var endX = 0f//图表的的起始X坐标
-    private var endY = 0f//图表的的起始Y坐标
+    private var endX = 0f//图表的的结束X坐标
+    private var endY = 0f//图表的的结束Y坐标
+    private var hundredWidth = 0f//100的文本宽度
     private var blankWidth = 0f//左或右空白的宽度
     private var blankHeight = 0f//上或下空白的高度
     private var chartWidth = 0f//图表的宽度
     private var chartHeight = 0f//图表的高度
-    private var spotRadius = 10f//圆点的半径
-
-
     private var mHeight = 0f//View的高
     private var mWidth = 0f//View的宽
     private val margin = 16f
     private var aPartWidth = 0f
     private var mScroolX = 0f
+    private var mAnimValue = 0f
     private var isDown = false
-    private var isCanScroll = false//是否可以滚动
+    private var isCanScroll = true//是否可以滚动
+    private var isAniming = false
 
     private val values by lazy { ArrayList<Int>() }
 
     private val mPoints = ArrayList<PointF>()
+    private val mPath by lazy { Path() }
     private val gradualBackgroundPath by lazy { Path() }
     private val bezierCurvePath by lazy { Path() }
+
+    private val animator by lazy {
+        ValueAnimator.ofFloat(1f, 0f).apply {
+            addUpdateListener { animation ->
+                mAnimValue = animation.animatedValue.toString().toFloat()
+                postInvalidate()
+            }
+            addListener(MAnimatorListener {
+                isAniming = it
+            })
+            duration = 2000
+        }
+    }
 
     private val linePaint by lazy {
         getPaint(getColor(R.color.bessel_line), 4, Paint.Style.STROKE)
     }
     private val formPaint by lazy {
-        getPaint(getColor(R.color.bessel_from_line), 1, Paint.Style.STROKE)
+        getPaint(getColor(R.color.bessel_from_line), 2, Paint.Style.STROKE)
     }
-    private val noodlesPaint by lazy {
-        getPaint(getColor(R.color.teal_700), 1, Paint.Style.STROKE)
+    var linearGradientColors =
+        intArrayOf(getColor(R.color.bessel_gradual1), getColor(R.color.bessel_gradual2))
+    private val linearGradientPaint by lazy {
+        getPaint(getColor(R.color.teal_700), 1, Paint.Style.FILL).apply {
+            alpha = 255
+            shader =
+                LinearGradient(0f, 0f, 0f, endY, linearGradientColors, null, Shader.TileMode.CLAMP)
+        }
     }
     private val spotPaint by lazy {
         getPaint(getColor(R.color.bessel_text), 1, Paint.Style.FILL_AND_STROKE)
@@ -105,11 +132,9 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         gradualBackgroundPath.reset()
         bezierCurvePath.reset()
         canvas?.apply {
-//            scroolTest()
             drawForm()// 底格的横线
             save()
             translate(mScroolX, 0f)// 平移
-            drawBottomNumber()// 画底部的数字
             for (x in 0 until mPoints.size - 1) {
                 bezierCurvePath.moveTo(mPoints[x].x, mPoints[x].y)
                 getBezierCurveValue(mPoints[x], mPoints[x + 1]) { p1, p2, p3 ->
@@ -120,14 +145,76 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 }
             }
             //贝瑟尔曲线的渐变
-            if (isShowGradualBackground) drawPath(gradualBackgroundPath, noodlesPaint)
+            if (isShowGradualBackground) drawPath(gradualBackgroundPath, linearGradientPaint)
+
             //贝瑟尔曲线
             drawPath(bezierCurvePath, linePaint)
             mPoints.forEach {
                 drawSpotAndLine(it)//贝瑟尔曲线上的点
             }
+            drawBottomNumber()// 画底部的数字
             restore()
-            drawScale()
+            drawScale()// 画刻度上的字和刻度的竖线和横线
+            //画一个蒙版越来越小来当做动画,用其他方法计算找能用的方法实在是太费劲了，还不如这个方法简单
+            if (isShowAnim) mAnim()
+        }
+    }
+
+    fun setData(list: ArrayList<Int>) {
+        mPoints.clear()
+        values.clear()
+        mScroolX = 0f
+        values.addAll(list)
+
+        initFoundationSize(list.size) {
+            var index = 0
+            list.forEach {
+                val x =
+                    if (isLeft) aPartWidth * index + startX
+                    else aPartWidth * index + hundredWidth + margin
+
+                val y = (chartHeight / 100) * (100f - it) + startY
+                mPoints.add(PointF(x, y))
+                index++
+            }
+        }
+        if (isShowAnim) {
+            animator.cancel()
+            animator.start()
+        } else postInvalidate()
+    }
+
+    private fun Canvas.mAnim() {
+        mPath.reset()
+        val animWidth = mWidth - (textPaint.measureText("100") + margin + linePaint.strokeWidth / 2)
+        if (isLeft) {
+            mPath.moveTo(0f, 0f)
+            mPath.lineTo(0f, endY - linePaint.strokeWidth / 2)
+            mPath.lineTo(animWidth * mAnimValue, endY - linePaint.strokeWidth / 2)
+            mPath.lineTo(animWidth * mAnimValue, 0f)
+        } else {
+            mPath.moveTo(mWidth - (animWidth * mAnimValue), 0f)
+            mPath.lineTo(mWidth - (animWidth * mAnimValue), endY - linePaint.strokeWidth / 2)
+            mPath.lineTo(mWidth, endY - linePaint.strokeWidth / 2)
+            mPath.lineTo(mWidth, 0f)
+        }
+        mPath.close()
+        drawPath(mPath, backgroundPaint)
+
+        val h = chartHeight / 10
+        val startX =
+            if (isLeft) animWidth * mAnimValue
+            else mWidth
+        var startY: Float
+        val stopX =
+            if (isLeft) 0f
+            else mWidth - (animWidth * mAnimValue)
+
+        var stopY: Float
+        for (x in 0..9) {//画横线和横着的数字
+            startY = h * x + this@MyChartView.startY
+            stopY = h * x + this@MyChartView.startY
+            drawLine(startX, startY, stopX, stopY, formPaint)
         }
     }
 
@@ -135,29 +222,33 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      * 画刻度上的字和刻度的竖线和横线
      */
     private fun Canvas.drawScale() {
-        Path().also { mPath ->// 左或右竖着字的北京
-            if (isLeft) {
-                mPath.moveTo(endX, 0f) //移动画笔到指定位置
-                mPath.lineTo(mWidth, 0f)
-                mPath.lineTo(mWidth, mHeight)
-                mPath.lineTo(endX, mHeight)
-                mPath.close()
-            } else {
-                mPath.moveTo(0f, 0f) //移动画笔到指定位置
-                mPath.lineTo(startX, 0f)
-                mPath.lineTo(startX, mHeight)
-                mPath.lineTo(0f, mHeight)
-                mPath.close()
-            }
-            drawPath(mPath, backgroundPaint)
-        }
-
         val h = chartHeight / 10
-        val param = 14f
-        val strHeight = measureHeight(textPaint) / 2
+        var param = textPaint.measureText("10") / 2
         var strX: Float
         var strY: Float
         var str: String
+
+        mPath.reset()// 左或右竖着字的背景
+        if (isLeft) {
+            mPath.moveTo(endX, 0f) //移动画笔到指定位置
+            mPath.lineTo(endX, endY) //移动画笔到指定位置
+            mPath.lineTo(endX + param, endY) //移动画笔到指定位置
+            mPath.lineTo(endX + param, mHeight) //移动画笔到指定位置
+            mPath.lineTo(mWidth, mHeight)
+            mPath.lineTo(mWidth, 0f)
+            mPath.close()
+        } else {
+            mPath.moveTo(0f, 0f) //移动画笔到指定位置
+            mPath.lineTo(startX, 0f)
+            mPath.lineTo(startX, endY)
+            mPath.lineTo(startX - param, endY)
+            mPath.lineTo(startX - param, mHeight)
+            mPath.lineTo(0f, mHeight)
+            mPath.close()
+        }
+        drawPath(mPath, backgroundPaint)
+
+        param = 14f
         for (x in 0..10) {//画横线和横着的数字
             str = "${(10 - x) * 10}"
             strX =
@@ -166,7 +257,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 } else {
                     startX - textPaint.measureText(str) - param
                 }
-            strY = (h * x + startY) + strHeight
+            strY = h * x + startY
             drawText(str, strX, strY, textPaint)
         }
         if (isLeft) {//表格最外的横线和竖线
@@ -178,30 +269,18 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         }
     }
 
-    private fun Canvas.scroolTest() {
-        translate(mScroolX, 0f)
-        Path().also { mPath ->
-            mPath.moveTo(50f, 50f) //移动画笔到指定位置
-            mPath.lineTo(200f, 50f)
-            mPath.lineTo(200f, 300f)
-            mPath.lineTo(50f, 300f)
-            mPath.close()
-            drawPath(mPath, spotPaint)
-        }
-        Path().also { mPath ->
-            mPath.moveTo(300f, 50f) //移动画笔到指定位置
-            mPath.lineTo(1300f, 50f)
-            mPath.lineTo(1300f, 300f)
-            mPath.lineTo(300f, 300f)
-            mPath.close()
-            drawPath(mPath, spotPaint)
-        }
-    }
-
     /**
      * 画底部的数字
      */
     private fun Canvas.drawBottomNumber() {
+        mPath.reset()
+        mPath.moveTo(0f, endY)
+        mPath.lineTo(0f, mHeight)
+        mPath.lineTo(mWidth, mHeight)
+        mPath.lineTo(mWidth, endY)
+        mPath.close()
+        drawPath(mPath, backgroundPaint)
+
         val strHeight = measureHeight(textPaint) / 2
         var strX: Float
         var strY: Float
@@ -220,7 +299,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      */
     private fun Canvas.drawSpotAndLine(point: PointF) {
         //贝瑟尔曲线到底的竖线
-        if (isShowBezierVerticalLine)
+        if (isShowBezierCurveLine)
             drawLine(
                 point.x,
                 point.y,
@@ -249,18 +328,6 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         gradualBackgroundPath.cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
         gradualBackgroundPath.lineTo(p3.x, endY)
         gradualBackgroundPath.lineTo(mPoints[x].x, endY)
-        noodlesPaint.alpha = 255
-        noodlesPaint.style = Paint.Style.FILL
-
-        noodlesPaint.shader = LinearGradient(
-            0f,
-            0f,
-            0f,
-            endY,
-            intArrayOf(getColor(R.color.bessel_gradual1), getColor(R.color.bessel_gradual2)),
-            null,
-            Shader.TileMode.CLAMP
-        )
     }
 
     private fun getColor(id: Int): Int = context.resources.getColor(id)
@@ -274,7 +341,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         var startY: Float
         var stopX: Float
         var stopY: Float
-        for (x in 0..10) {//画横线和横着的数字
+        for (x in 0..9) {//画横线和横着的数字
             startX = 0f
             startY = h * x + this@MyChartView.startY
             stopX = mWidth
@@ -297,8 +364,6 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         foo.invoke(PointF(wt, startPoint.y), PointF(wt, endPoint.y), endPoint)
     }
 
-    private var mBackgroundColor = 0
-
     @SuppressLint("Recycle", "CustomViewStyleable")
     private fun initAttrs(attrs: AttributeSet?) {
         context.obtainStyledAttributes(attrs, R.styleable.chart).apply {
@@ -307,55 +372,72 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 Color.parseColor("#202836")
             )
             setBackgroundColor(mBackgroundColor)
+            linePaint.color = getColor(
+                R.styleable.chart_line_color,
+                Color.parseColor("#24FBB5")
+            )
+            formPaint.color = getColor(
+                R.styleable.chart_form_color,
+                Color.parseColor("#a9a9a9")
+            )
+            linearGradientColors = intArrayOf(
+                getColor(
+                    R.styleable.chart_linear_gradient_color_top,
+                    Color.parseColor("#FF018786")
+                ),
+                getColor(
+                    R.styleable.chart_linear_gradient_color_top,
+                    Color.parseColor("#FF018786")
+                )
+            )
+
+            spotPaint.color = getColor(
+                R.styleable.chart_spot_color,
+                Color.parseColor("#F4FBFF")
+            )
+            textPaint.color = getColor(
+                R.styleable.chart_text_color,
+                Color.parseColor("#F4FBFF")
+            )
+            textPaint.textSize = getDimension(R.styleable.chart_scale_text_size, 30f)
+            isShowBezierCurveLine =
+                getBoolean(R.styleable.chart_is_show_bezier_curve_line, true)
+            isLeft = getBoolean(R.styleable.chart_is_left, true)
+            isShowGradualBackground = getBoolean(R.styleable.chart_is_show_gradual_background, true)
+            isCompelCanScroll = getBoolean(R.styleable.chart_is_compel_can_scroll, true)
+            isShowAnim = getBoolean(R.styleable.chart_is_show_anim, true)
+            isShowSpot = getBoolean(R.styleable.chart_is_show_spot, true)
+            spotRadius = getDimension(R.styleable.chart_spot_radius, 10f)
+            numberInWindow = getDimension(R.styleable.chart_number_in_window, 8f).toInt()
         }
-    }
-
-    fun mInvalidate(list: ArrayList<Int>) {
-        mPoints.clear()
-        values.clear()
-        values.addAll(list)
-
-        initFoundationSize(list.size) {
-            var index = 0
-            list.forEach {
-                val x =
-                    if (isLeft) aPartWidth * index + startX
-                    else aPartWidth * index + blankWidth + margin
-
-                val y = (chartHeight / 100) * (100f - it) + startY
-                mPoints.add(PointF(x, y))
-                index++
-            }
-        }
-
-        postInvalidate()
     }
 
     /**
      * 每次更新数据最好初始化一下基础尺寸，以免图因为数据量不同而混乱
      */
     private fun initFoundationSize(size: Int, foo: () -> Unit) {
-        blankWidth = textPaint.measureText("100")//空白处的宽度
-        blankHeight = measureHeight(textPaint).toFloat() + margin * 2 + spotRadius
+        hundredWidth = textPaint.measureText("100")
+        blankWidth = hundredWidth//空白处的宽度
+        blankHeight = (measureHeight(textPaint).toFloat() + margin + spotRadius) * 2
         aPartWidth =
             if (isCompelCanScroll) {
-                (mWidth - blankWidth - margin * 2) / (size - 1)
+                if (size > 6) mWidth / numberInWindow
+                else (mWidth - hundredWidth - margin * 2) / (if (size == 1) 2 else size - 1)
             } else {
-                if (size > 6) mWidth / 10f
-                else (mWidth - blankWidth - margin * 2) / (size - 1)
+                (mWidth - hundredWidth - margin * 2) / (if (size == 1) 2 else size - 1)
             }
         if (isLeft) {
-            startX = mWidth - (margin + blankWidth + aPartWidth * size) + aPartWidth-spotRadius
-            endX = mWidth - margin - blankWidth
+            startX = mWidth - (margin + hundredWidth + aPartWidth * size) + aPartWidth - spotRadius
+            endX = mWidth - margin - hundredWidth
         } else {
-            startX = blankWidth + margin
-            endX = margin + blankWidth + aPartWidth * size
+            startX = hundredWidth + margin
+            endX = startX + aPartWidth * size - aPartWidth
         }
-        startY = margin
-        endY = margin + mHeight - blankHeight
+        startY = measureHeight(textPaint).toFloat() + spotRadius
+        endY = mHeight - blankHeight / 2
         chartWidth = endX - startX
         chartHeight = endY - startY
-        isCanScroll = isCompelCanScroll && chartWidth > mWidth - (blankWidth + margin)
+        isCanScroll = isCompelCanScroll && chartWidth > mWidth - (hundredWidth + margin)
         foo.invoke()
         blankWidth += aPartWidth
     }
@@ -382,7 +464,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     }
 
     /**
-     * 获取要画的TextView的高度
+     * 获取要画的文本的高度
      * todo 获取宽度可以直接用 TextView 的 Paint 调用measureText("字符串")
      * todo textView.paint.measureText("字符串");
      */
@@ -400,8 +482,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        log("isCanScroll = $isCanScroll")
-        return if (isCanScroll) {
+        return if (isCanScroll && !isAniming) {
             event?.apply {
                 when (action) {
                     MotionEvent.ACTION_DOWN -> isDown = true
@@ -414,6 +495,9 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         } else super.onTouchEvent(event)
     }
 
+    /**
+     * onFling方法中调用fling时，此方法会被调用
+     */
     override fun computeScroll() {
         if (overScroller.computeScrollOffset()) {
             if (!isDown) {
@@ -436,8 +520,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         return false
     }
 
-    override fun onShowPress(e: MotionEvent?) {
-    }
+    override fun onShowPress(e: MotionEvent?) {}
 
     override fun onSingleTapUp(e: MotionEvent?): Boolean {
         return false
@@ -445,19 +528,25 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
     private fun checkMScroolX() {
         if (isLeft) {
-            val leftBoundary = chartWidth - mWidth + blankWidth - aPartWidth + margin * 2
+            val leftBoundary =
+                chartWidth - mWidth + blankWidth - aPartWidth + margin * 2 + hundredWidth
             when {
                 mScroolX > leftBoundary -> mScroolX = leftBoundary
                 mScroolX < -margin -> mScroolX = -margin
             }
         } else {
             when {
-                mScroolX > 0 -> mScroolX = margin
-                mScroolX < mWidth - chartWidth + margin -> mScroolX = mWidth - chartWidth
+                mScroolX > 0 -> mScroolX = spotRadius
+                mScroolX < mWidth - (chartWidth + spotRadius + hundredWidth * 2) -> mScroolX =
+                    mWidth - (chartWidth + spotRadius + hundredWidth * 2)
             }
         }
+        log("mScroolX =$mScroolX     spotRadius = $spotRadius")
     }
 
+    /**
+     * 手指在屏幕上左右滑动时调用
+     */
     override fun onScroll(
         e1: MotionEvent?,
         e2: MotionEvent?,
@@ -466,14 +555,16 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     ): Boolean {
         mScroolX -= distanceX
         checkMScroolX()
-        log("mScroolX = $mScroolX")
         postInvalidate()
         return true
     }
 
-    override fun onLongPress(e: MotionEvent?) {
-    }
+    override fun onLongPress(e: MotionEvent?) {}
 
+    /**
+     * 手指在屏幕上滑动抬起时，需要惯性滚动，此方法被调用
+     * @param velocityX 横着滚动的速度
+     */
     override fun onFling(
         e1: MotionEvent?,
         e2: MotionEvent?,
@@ -489,5 +580,21 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
     private fun log(str: String) {
         Log.d("MYCHARTVIEW1", str)
+    }
+
+    class MAnimatorListener(val foo: (Boolean) -> Unit) : Animator.AnimatorListener {
+        override fun onAnimationStart(animation: Animator?) {
+            foo.invoke(true)
+        }
+
+        override fun onAnimationEnd(animation: Animator?) {
+            foo.invoke(false)
+        }
+
+        override fun onAnimationCancel(animation: Animator?) {
+            foo.invoke(false)
+        }
+
+        override fun onAnimationRepeat(animation: Animator?) {}
     }
 }

@@ -21,10 +21,13 @@ class BesselCurveActivity  : Activity() {
         setContentView(binding.root)
     }
 
+    fun btnClick1(v: View) {
+//        binding.waveView.startAnimation();
+    }
     fun btnClick(v: View) {
         ArrayList<Int>().apply {
-//            for (x in 0..getRanNumber(8, 12)) {
-            for (x in 0..9  ) {
+//            for (x in 0..getRanNumber(8, 20)) {
+            for (x in 0..8 ) {
                 add(getRanNumber(0, 100))
             }
 //            add(100)
@@ -34,11 +37,12 @@ class BesselCurveActivity  : Activity() {
 //            add(0)
 //            add(70)
 //            add(50)
+//            add(56)
 //            add(100)
 //            add(80)
 //            add(100)
         }.apply {
-            binding.mChart.mInvalidate(this)
+            binding.mChart.setData(this)
 
             var str = ""
             forEach {

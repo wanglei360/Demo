@@ -40,7 +40,7 @@
             android:textSize="22sp" />
     </LinearLayout>
 
-    <com.ntrade.demo.view.bessel_curve.MScrollView
+    <com.ntrade.demo.view.chart.MScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -49,12 +49,15 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <com.ntrade.demo.view.bessel_curve.MyChartView
+            <com.ntrade.demo.view.chart.MyChartView
                 android:id="@+id/mChart"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
+                android:layout_height="300dp"
                 android:layout_marginTop="10dp"
-                app:background_color="@color/bessel_background" />
+                app:background_color="@color/bessel_background"
+                app:is_show_spot="true"
+                app:is_show_bezier_vertical_line="false"
+                app:is_left="true" />
 
             <TextView
                 android:id="@+id/tv"
@@ -69,7 +72,7 @@
 
 
         </LinearLayout>
-    </com.ntrade.demo.view.bessel_curve.MScrollView>
+    </com.ntrade.demo.view.chart.MScrollView>
 
 
 </LinearLayout>

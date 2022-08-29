@@ -16,18 +16,22 @@
     </declare-styleable>
 
     <declare-styleable name="chart">
-        <attr name="line_color" format="color" />
-        <attr name="background_color" format="color" />
-        <!--        <attr name="background_line_width" format="dimension" />-->
-        <!--        <attr name="radius" format="dimension" />-->
-        <!--        <attr name="text_size" format="dimension" />-->
-        <!--        <attr name="text_default_color" format="color" />-->
-        <!--        <attr name="text_selector_color" format="color" />-->
-        <!--        <attr name="text_paint_width" format="float" />-->
-        <!--        <attr name="background_is_line">-->
-        <!--            <enum name="yes" value="1" />-->
-        <!--            <enum name="no" value="2" />-->
-        <!--        </attr>-->
+        <attr name="background_color" format="color" /><!-- 底色 -->
+        <attr name="line_color" format="color" /><!-- 曲线的颜色 -->
+        <attr name="form_color" format="color" /><!-- 底下表格线的颜色 -->
+        <attr name="linear_gradient_color_top" format="color" /><!-- 贝瑟尔曲线底色渐变的颜色 -->
+        <attr name="linear_gradient_color_bottom" format="color" /><!-- 贝瑟尔曲线底色渐变的颜色 -->
+        <attr name="spot_color" format="color" /><!-- 圆点的颜色 -->
+        <attr name="text_color" format="color" /><!-- 文字的颜色 -->
+        <attr name="scale_text_size" format="dimension" /><!-- 刻度上的文本字号 -->
+        <attr name="is_show_bezier_curve_line" format="boolean" /><!-- 是否显示曲线到底的竖线 -->
+        <attr name="is_left" format="boolean" /><!-- 是否是左边开始 -->
+        <attr name="is_show_gradual_background" format="boolean" /><!-- 是否显示渐变底色 -->
+        <attr name="is_compel_can_scroll" format="boolean" /><!-- 是否可以滚动 -->
+        <attr name="is_show_anim" format="boolean" /><!-- 是否展示动画 -->
+        <attr name="is_show_spot" format="boolean" /><!-- 是否展示圆点 -->
+        <attr name="spot_radius" format="dimension" /><!-- 圆点的半径 -->
+        <attr name="number_in_window" format="dimension" /><!-- 一个屏幕中可以分几分，只有数据源大于6个，并且is_compel_can_scroll为true时生效 -->
     </declare-styleable>
 
 </resources>

@@ -1,4 +1,4 @@
-package com.ntrade.demo.view.bessel_curve;
+package com.ntrade.demo.view.chart;
 
 import android.content.Context;
 import android.util.AttributeSet;
