@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ntrade.demo.R
 import com.ntrade.demo.adapter.MListAdapter
 import com.ntrade.demo.databinding.ActivityMainBinding
+import com.ntrade.demo.view.chart.MyChartView
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity() {
             add("输入框")// 3
             add("按钮音效")// 4
             add("贝瑟尔曲线的图")// 5
+            add("饼图")// 6
             binding.lv.adapter = MListAdapter(this) { position ->
                 when (position) {
                     0 -> goToActivity(ViewBindingActivity::class.java)
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity() {
                     3 -> goToActivity(EditTextActivity::class.java)
                     4 -> goToActivity(SoundPoolActivity::class.java)
                     5 -> goToActivity(BesselCurveActivity::class.java)
+                    6 -> goToActivity(PancakeActivity::class.java)
                 }
             }
         }

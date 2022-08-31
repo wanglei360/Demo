@@ -25,6 +25,7 @@
         <activity android:name=".activity.EditTextActivity" />
         <activity android:name=".activity.SoundPoolActivity" />
         <activity android:name=".activity.BesselCurveActivity" />
+        <activity android:name=".activity.PancakeActivity" />
     </application>
 
 </manifest>

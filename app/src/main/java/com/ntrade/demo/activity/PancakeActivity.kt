@@ -3,18 +3,18 @@ package com.ntrade.demo.activity
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
-import com.ntrade.demo.databinding.ActivityBesselCurveLayoutBinding
+import com.ntrade.demo.databinding.ActivityPancakeLayoutBinding
 
 /** * 创建者：leiwu
- * * 时间：2022/8/26 09:46
+ * * 时间：2022/8/31 09:41
  * * 类描述：
  * * 修改人：
  * * 修改时间：
  * * 修改备注：
  */
-class BesselCurveActivity : Activity() {
+class PancakeActivity : Activity() {
 
-    private val binding by lazy { ActivityBesselCurveLayoutBinding.inflate(layoutInflater) }
+    private val binding by lazy { ActivityPancakeLayoutBinding.inflate(layoutInflater) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,8 +27,19 @@ class BesselCurveActivity : Activity() {
 
     fun btnClick(v: View) {
         ArrayList<Int>().apply {
-            for (x in 0..100) {
-                add(getRanNumber1(0, 100))
+            var x = 0
+            var b = true
+            while (b) {
+                val y = getRanNumber1(8, 40)
+                if (x + y > 100) {
+                    b = false
+                    val num = get(size - 1) + (100 - x)
+                    removeAt(size - 1)
+                    add(num)
+                } else {
+                    x += y
+                    add(y)
+                }
             }
         }.apply {
             binding.mChart.setDatas(this)

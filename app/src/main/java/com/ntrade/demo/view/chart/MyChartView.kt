@@ -160,7 +160,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         }
     }
 
-    fun setData(list: ArrayList<Int>) {
+    fun setDatas(list: ArrayList<Int>) {
         mPoints.clear()
         values.clear()
         mScroolX = 0f
