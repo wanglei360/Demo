@@ -3,7 +3,9 @@ package com.ntrade.demo.activity
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import com.ntrade.demo.databinding.ActivityPancakeLayoutBinding
+import com.ntrade.demo.tool.ToastUtil
 
 /** * 创建者：leiwu
  * * 时间：2022/8/31 09:41
@@ -19,30 +21,29 @@ class PancakeActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        binding.mPancakeView.setItemClickListener { isSel, position ->
+            if (isSel) {
+                data?.apply {
+                    Toast.makeText(this@PancakeActivity, "${data!![position]}", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+        }
     }
 
     fun btnClick1(v: View) {
-//        binding.waveView.startAnimation();
     }
 
+    var data: ArrayList<Int>? = null
     fun btnClick(v: View) {
         ArrayList<Int>().apply {
-            var x = 0
-            var b = true
-            while (b) {
-                val y = getRanNumber1(4, 20)
-                if (x + y > 100) {
-                    b = false
-                    val num = get(size - 1) + (100 - x)
-                    removeAt(size - 1)
-                    add(num)
-                } else {
-                    x += y
-                    add(y)
-                }
+            val num = getRanNumber1(4, 12)
+            for (x in 0..num) {
+                add(getRanNumber1(30, 80))
             }
         }.apply {
-            binding.mChart.setDatas(this)
+            data = this
+            binding.mPancakeView.setDatas(this)
             var str = ""
             var ssr = ""
             forEach {

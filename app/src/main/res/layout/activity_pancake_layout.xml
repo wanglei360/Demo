@@ -49,10 +49,16 @@
             android:orientation="vertical">
 
             <com.ntrade.demo.view.chart.PancakeView
-                android:id="@+id/mChart"
+                android:id="@+id/mPancakeView"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
-                android:background="@color/color_caae7e" />
+                app:pancake_animator_duration="400"
+                app:pancake_background_color="@color/color_caae7e"
+                app:pancake_is_show_small_circular="true"
+                app:pancake_is_show_split_line="false"
+                app:pancake_is_start_anim="false"
+                app:pancake_line_color="#1966ff"
+                app:pancake_text_color="#000" />
 
             <TextView
                 android:id="@+id/tv"

@@ -27,35 +27,42 @@ import kotlin.math.sin
 class PancakeView : View {
 
     private var isShowSplitLine = true
+    private var isShowSmallCircular = true
     private var isStartAnim = true
+    private var mBackgroundColor = Color.parseColor("#ffffff")
+    private var mTextColor = Color.parseColor("#000000")
+    private var mLineColor = Color.parseColor("#000000")
+    private var animatorDuration = 600
 
     private var isAniming = false
     private var radius = 0f//半径
     private var centerX = -1f
     private var centerY = -1f
-    private var peripheralWidth = 30f//点击之后突出的那一块的宽度
+    private var peripheralWidth = 1f//点击之后突出的那一块的宽度
     private var oldSelPosition = -1
     private var mHeight = 0f//View的高
     private var mWidth = 0f//View的宽
     private var splitLineWidth = 10f//分割线的宽度
     private var mAnimValue = 0f
 
-    private val mDatas = ArrayList<PancakeData>()
+    private val mDatas by lazy { ArrayList<PancakeData>() }
+    private val splitLineDegrees by lazy { ArrayList<Float>() }
     private var angles: FloatArray? = null
-    private val mPath = Path()
 
-    private val spotPaint by lazy {
-        getPaint(getColor(R.color.bessel_text), 1, Paint.Style.FILL_AND_STROKE)
-    }
     private val linePaint by lazy {
-        getPaint(getColor(R.color.text_000000), 5, Paint.Style.FILL_AND_STROKE)
+        getPaint(mLineColor, 5, Paint.Style.FILL_AND_STROKE)
     }
-    private val lasdfinePaint by lazy {
-        getPaint(getColor(R.color.text_cc0000), 5, Paint.Style.FILL_AND_STROKE)
-    }
-    private val splitLinePaint by lazy {
+    private val splitLinePaint by lazy {//分割线
         getPaint(
-            getColor(R.color.color_caae7e),
+            mBackgroundColor,
+            splitLineWidth.toInt(),
+            Paint.Style.FILL_AND_STROKE
+        )
+    }
+
+    private val smallCircularPaint by lazy {//中间小圆
+        getPaint(
+            mBackgroundColor,
             splitLineWidth.toInt(),
             Paint.Style.FILL_AND_STROKE
         )
@@ -63,12 +70,10 @@ class PancakeView : View {
 
     private val textPaint by lazy {
         getPaint(
-            getColor(R.color.text_000000),
+            mTextColor,
             1,
             Paint.Style.FILL_AND_STROKE
-        ).apply {
-            textSize = 40f
-        }
+        )
     }
 
     private val animator by lazy {
@@ -81,13 +86,13 @@ class PancakeView : View {
             addListener(MyChartView.MAnimatorListener {
                 isAniming = it
             })
-            duration = 600
+            duration = animatorDuration.toLong()
         }
     }
 
     constructor(context: Context?) : super(context) {}
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
-//        initAttrs(attrs)
+        initAttrs(attrs)
     }
 
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -95,7 +100,39 @@ class PancakeView : View {
         attrs,
         defStyleAttr
     ) {
-//        initAttrs(attrs)
+        initAttrs(attrs)
+    }
+
+    private fun initAttrs(attrs: AttributeSet?) {
+        context.obtainStyledAttributes(attrs, R.styleable.pancake).apply {
+            mBackgroundColor = getColor(
+                R.styleable.pancake_pancake_background_color,
+                Color.parseColor("#ffffff")
+            )
+            setBackgroundColor(mBackgroundColor)
+            splitLinePaint.color = mBackgroundColor
+            smallCircularPaint.color = mBackgroundColor
+
+            mTextColor = getColor(
+                R.styleable.pancake_pancake_text_color,
+                Color.parseColor("#000000")
+            )
+            textPaint.color = mTextColor
+
+            mLineColor = getColor(
+                R.styleable.pancake_pancake_line_color,
+                Color.parseColor("#000000")
+            )
+            linePaint.color = mLineColor
+
+            isShowSplitLine = getBoolean(R.styleable.pancake_pancake_is_show_split_line, true)
+            isStartAnim = getBoolean(R.styleable.pancake_pancake_is_start_anim, true)
+            isShowSmallCircular =
+                getBoolean(R.styleable.pancake_pancake_is_show_small_circular, true)
+
+            animatorDuration = getInt(R.styleable.pancake_pancake_animator_duration, 500)
+            animator.duration = animatorDuration.toLong()
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -105,6 +142,8 @@ class PancakeView : View {
         centerX = mWidth / 3
         centerY = mHeight / 2
         radius = mWidth / 5
+        peripheralWidth = mWidth / 27f
+        textPaint.textSize = mWidth / 27f
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -127,7 +166,6 @@ class PancakeView : View {
         }
     }
 
-    private val splitLineDegrees by lazy { ArrayList<Float>() }
     private fun Canvas.drawAnim() {
         var startDegree = 0f
         var endDegree = 0f
@@ -136,40 +174,40 @@ class PancakeView : View {
             startDegree += endDegree
             endDegree = it.endDegree * mAnimValue
             drawArc(
-                it.oval,
+                it.oval!!,
                 startDegree,  //开始角度
                 endDegree,  //扫过的角度
                 true,  //是否使用中心
-                it.mPaint
+                it.mPaint!!
             )
             splitLineDegrees.add(startDegree)
         }
         if (isShowSplitLine) {
             splitLinePaint.strokeWidth = splitLineWidth * mAnimValue
             for (x in 0 until mDatas.size) {
-                calculatePosition(splitLineDegrees[x] + 90, radius + peripheralWidth).apply {
+                calculatePosition(splitLineDegrees[x] + 90, radius + peripheralWidth * 0.4f).apply {
                     drawLine(centerX, centerY, this[0], this[1], splitLinePaint)
                 }
             }
         }
 
-
-        drawArc(
-            RectF(
-                (centerX - radius / 3),
-                (centerY - radius / 3),
-                (centerX + radius / 3),
-                (centerY + radius / 3)
-            ),
-            0f,  //开始角度
-            360f,  //扫过的角度
-            true,  //是否使用中心
-            splitLinePaint
-        )
+        if (isShowSmallCircular)
+            drawArc(//中心小圆
+                RectF(
+                    (centerX - radius / 3),
+                    (centerY - radius / 3),
+                    (centerX + radius / 3),
+                    (centerY + radius / 3)
+                ),
+                0f,  //开始角度
+                360f,  //扫过的角度
+                true,  //是否使用中心
+                smallCircularPaint
+            )
 
         if (mAnimValue == 1f) {
             mDatas.forEach {
-                drawText(it.num, it.textX, it.textY, textPaint)
+                drawText(it.text, it.textX, it.textY, textPaint)
             }
         }
     }
@@ -177,22 +215,22 @@ class PancakeView : View {
     private fun Canvas.drawNoAnim() {
         mDatas.forEach {
             drawArc(
-                it.oval,
+                it.oval!!,
                 it.startDegree,  //开始角度
                 it.endDegree,  //扫过的角度
                 true,  //是否使用中心
-                it.mPaint
+                it.mPaint!!
             )
 
-            drawLine(
-                it.startX,
-                it.startY,
-                it.endX,
-                it.endY,
+            drawLine(//从圆里面画出来的斜线
+                it.slantLineStartX,
+                it.slantLineStartY,
+                it.slantLineEndX,
+                it.slantLineEndY,
                 linePaint
             )
 
-            drawLine(
+            drawLine(//跟显示的文本挨着的横线
                 it.textLineStartX,
                 it.textLineStartY,
                 it.textLineEndX,
@@ -200,33 +238,27 @@ class PancakeView : View {
                 linePaint
             )
 
-            drawText(it.num, it.textX, it.textY - 6, textPaint)
+            drawText(it.text, it.textX, it.textY - 6, textPaint)
         }
-        if (isShowSplitLine) {
-            mDatas.forEach {
-                calculatePosition(it.startDegree + 90, radius + peripheralWidth).apply {
-                    drawLine(centerX, centerY, this[0], this[1], splitLinePaint)
-                }
-            }
-        }
-    }
-
-    private fun Canvas.drawSpot(degree: Float) {
-        calculatePosition(degree, radius - 40).apply {
-            val startX = this[0]
-            val startY = this[1]
-            drawArc(
+        if (isShowSmallCircular)
+            drawArc(//中心小圆
                 RectF(
-                    (startX - 12),
-                    (startY - 12),
-                    (startX + 12),
-                    (startY + 12)
+                    (centerX - radius / 3),
+                    (centerY - radius / 3),
+                    (centerX + radius / 3),
+                    (centerY + radius / 3)
                 ),
                 0f,  //开始角度
                 360f,  //扫过的角度
                 true,  //是否使用中心
-                getRandomColorPaint()
+                smallCircularPaint
             )
+        if (isShowSplitLine) {
+            mDatas.forEach {// 分割线
+                calculatePosition(it.startDegree + 90, radius + peripheralWidth * 0.4f).apply {
+                    drawLine(centerX, centerY, this[0], this[1], splitLinePaint)
+                }
+            }
         }
     }
 
@@ -286,17 +318,24 @@ class PancakeView : View {
                 oldSelPosition = -1
             } else {
                 mDatas[selPosition].apply {
+                    val length = radius + peripheralWidth * 0.4f
                     oval = RectF(
-                        centerX - (radius + peripheralWidth),
-                        centerY - (radius + peripheralWidth),
-                        centerX + (radius + peripheralWidth),
-                        centerY + (radius + peripheralWidth)
+                        centerX - length,
+                        centerY - length,
+                        centerX + length,
+                        centerY + length
                     )
                 }
                 oldSelPosition = selPosition
             }
+            foo?.invoke(oldSelPosition != -1, selPosition)
             postInvalidate()
         }
+    }
+
+    private var foo: ((Boolean, Int) -> Unit)? = null
+    fun setItemClickListener(foo: (Boolean, Int) -> Unit) {
+        this.foo = foo
     }
 
     /**
@@ -323,117 +362,101 @@ class PancakeView : View {
         return position
     }
 
-
     fun setDatas(datas: ArrayList<Int>) {
         mDatas.clear()
         animator.cancel()
         oldSelPosition = -1
+
+        var total = 0
+        datas.forEach {
+            total += it
+        }
         angles = FloatArray(datas.size)
         var angle = 0f
-        for (x in 0 until datas.size) {
-            angle += 360f / 100f * datas[x]
-            angles!![x] = angle
+        var index = 0
+        ArrayList<PancakeData>().also { list ->
+            datas.forEach {
+                list.add(PancakeData(it / (total / 100f), "$it"))
+                angle += 360f / 100f * (it / (total / 100f))
+                angles!![index] = angle
+                index++
+            }
+            list.setViewDataSources()
         }
-        if (isStartAnim) animStyle(datas)
-        else noAnimStyle(datas)
     }
 
-    private fun animStyle(datas: ArrayList<Int>) {
+    private fun ArrayList<PancakeData>.setViewDataSources() {
+        var index = 0
         var degree = 0f
         var position = 0
-        datas.forEach {
-            val newDegree = 360f / 100f * it
+        var textX: Float
+        var textY: Float
+        var textLineEndX: Float? = null
+        var startCoordinate0: FloatArray? = null
+        var endCoordinate1: FloatArray? = null
+        forEach {
+            val newDegree = 360f / 100f * it.num
             val degreeTotal = degree + newDegree
-            val coordinate =
-                calculatePosition(degreeTotal + 90 - newDegree / 2, radius * 0.76f)
 
-            val textX = coordinate[0] - textPaint.measureText("$it") / 2
-            val textY = coordinate[1] + measureHeight(textPaint) / 2
-            mDatas.add(
-                PancakeData(
-                    num = "$it",// 100中的几份
-                    startDegree = degree,// 360度中开始的度
-                    endDegree = newDegree,// 360度中结束的度
-                    startX = -1f,// 斜线线段的起始x坐标 todo 没用，所以没有赋值
-                    startY = -1f,// 斜线线段的起始y坐标 todo 没用，所以没有赋值
-                    endX = -1f,// 斜线线段的结束x坐标 todo 没用，所以没有赋值
-                    endY = -1f,// 斜线线段的结束y坐标 todo 没用，所以没有赋值
-                    textLineStartX = -1f,
-                    textLineStartY = -1f,
-                    textLineEndX = -1f,
-                    textLineEndY = -1f,
-                    textX = textX,// 文本的起始x坐标
-                    textY = textY,// 文本的起始Y坐标
-                    mPaint = getPaint(randomColor(), 1, Paint.Style.FILL_AND_STROKE),
-                    position = position++,
-                    oval = RectF(
-                        centerX - radius,
-                        centerY - radius,
-                        centerX + radius,
-                        centerY + radius
-                    )
-                )
-            )
-            degree += newDegree
-        }
-        animator.start()
-    }
-
-    private fun noAnimStyle(datas: ArrayList<Int>) {
-        var degree = 0f
-        var position = 0
-        datas.forEach {
-            val newDegree = 360f / 100f * it
-            val degreeTotal = degree + newDegree
-            val startCoordinate0 =
-                calculatePosition(degreeTotal + 90 - newDegree / 2, radius - peripheralWidth)
-            val endCoordinate1 =
-                calculatePosition(degreeTotal + 90 - newDegree / 2, radius + peripheralWidth)
-
-            val lineX = endCoordinate1[0]
-            val lineY = endCoordinate1[1]
-            val textWidth = textPaint.measureText("$it")
-            val textHeight = measureHeight(textPaint)
-            var textX = 0f
-            val textY = endCoordinate1[1] + textHeight / 2
-            val textLineEndX =
-                if (lineX > centerX) {
-                    textX = endCoordinate1[0] + textWidth
-                    endCoordinate1[0] + textWidth
-                } else {
-                    textX = endCoordinate1[0] - textWidth * 2
-                    endCoordinate1[0] - textWidth
+            if (isStartAnim) {//有动画的
+                calculatePosition(
+                    degreeTotal + 90 - newDegree / 2,
+                    radius * 0.76f
+                ).also { coordinate ->
+                    textX = coordinate[0] - textPaint.measureText(it.text) / 2
+                    textY = coordinate[1] + measureHeight(textPaint) / 2
                 }
-            mDatas.add(
-                PancakeData(
-                    num = "$it",// 100中的几份
-                    startDegree = degree,// 360度中开始的度
-                    endDegree = newDegree,// 360度中结束的度
-                    startX = startCoordinate0[0],// 斜线线段的起始x坐标
-                    startY = startCoordinate0[1],// 斜线线段的起始y坐标
-                    endX = endCoordinate1[0],// 斜线线段的结束x坐标
-                    endY = endCoordinate1[1],// 斜线线段的结束y坐标
-                    textLineStartX = endCoordinate1[0],
-                    textLineStartY = endCoordinate1[1],
-                    textLineEndX = textLineEndX,
-                    textLineEndY = endCoordinate1[1],
-                    textX = textX,// 文本的起始x坐标
-                    textY = textY,// 文本的起始Y坐标
-                    mPaint = getPaint(randomColor(), 1, Paint.Style.FILL_AND_STROKE),
-                    position = position++,
-                    oval = RectF(
-                        centerX - radius,
-                        centerY - radius,
-                        centerX + radius,
-                        centerY + radius
-                    )
-                )
-            )
-            degree += newDegree
-        }
-        postInvalidate()
-    }
+            } else {//没动画的
+                startCoordinate0 =
+                    calculatePosition(degreeTotal + 90 - newDegree / 2, radius - peripheralWidth)
+                endCoordinate1 =
+                    calculatePosition(degreeTotal + 90 - newDegree / 2, radius + peripheralWidth)
 
+                val textWidth = textPaint.measureText(it.text)
+                val textHeight = measureHeight(textPaint)
+                val lineX = endCoordinate1!![0]
+                textLineEndX =
+                    if (lineX > centerX) {
+                        endCoordinate1!![0] + textWidth
+                    } else {
+                        endCoordinate1!![0] - textWidth
+                    }
+                textX = if (lineX > centerX) {
+                    endCoordinate1!![0] + textWidth
+                } else {
+                    endCoordinate1!![0] - textWidth * 2
+                }
+                textY = endCoordinate1!![1] + textHeight / 2
+            }
+
+            it.startDegree = degree// 360度中开始的度
+            it.endDegree = newDegree// 360度中结束的度
+            it.slantLineStartX = if (!isStartAnim) startCoordinate0!![0] else -1f// 斜线线段的起始x坐标
+            it.slantLineStartY = if (!isStartAnim) startCoordinate0!![1] else -1f// 斜线线段的起始y坐标
+            it.slantLineEndX = if (!isStartAnim) endCoordinate1!![0] else -1f// 斜线线段的结束x坐标
+            it.slantLineEndY = if (!isStartAnim) endCoordinate1!![1] else -1f// 斜线线段的结束y坐标
+            it.textLineStartX = if (!isStartAnim) endCoordinate1!![0] else -1f
+            it.textLineStartY = if (!isStartAnim) endCoordinate1!![1] else -1f
+            it.textLineEndX = if (!isStartAnim) textLineEndX!! else -1f
+            it.textLineEndY = if (!isStartAnim) endCoordinate1!![1] else -1f
+            it.textX = textX// 文本的起始x坐标
+            it.textY = textY// 文本的起始Y坐标
+            it.mPaint = getPaint(randomColor(), 1, Paint.Style.FILL_AND_STROKE)
+            it.position = position++
+            it.oval = RectF(
+                centerX - radius,
+                centerY - radius,
+                centerX + radius,
+                centerY + radius
+            )
+            mDatas.add(it)
+            degree += newDegree
+            index++
+        }
+        if (isStartAnim)
+            animator.start()
+        else postInvalidate()
+    }
 
     private fun getColor(id: Int): Int = context.resources.getColor(id)
 
@@ -472,40 +495,40 @@ class PancakeView : View {
         Log.d("MYCHARTVIEW1", str)
     }
 
-    private fun getRandomColorPaint(): Paint {
-        spotPaint.color = randomColor()
-        return spotPaint
-    }
-
     /**
      * 生成随机颜色
      */
     private fun randomColor(): Int {
-        return Random().let {
+        val color = Random().let {
             Color.rgb(
                 it.nextInt(255),
                 it.nextInt(255),
                 it.nextInt(255)
             )
         }
+        return if (color != mBackgroundColor && color != mTextColor && color != mLineColor) {
+            color
+        } else randomColor()
     }
 }
 
 data class PancakeData(
-    val num: String,// 100中的几份
-    val startDegree: Float,// 360度中开始的度
-    val endDegree: Float,// 360度中结束的度
-    val startX: Float,// 斜线线段的起始x坐标
-    val startY: Float,// 斜线线段的起始y坐标
-    val endX: Float,// 斜线线段的结束x坐标
-    val endY: Float,// 斜线线段的结束y坐标
-    val textLineStartX: Float,//
-    val textLineStartY: Float,//
-    val textLineEndX: Float,//
-    val textLineEndY: Float,//
-    val textX: Float,// 文本的起始x坐标
-    val textY: Float,// 文本的起始Y坐标
-    val mPaint: Paint,//
-    val position: Int,//
-    var oval: RectF,//
-)
+    val num: Float,// 100中的几份
+    val text: String = "",// 显示的文本
+) {
+    var startDegree: Float = -1.0f// 360度中开始的度
+    var endDegree: Float = -1.0f//360度中结束的度
+    var slantLineStartX: Float = -1.0f// 斜线线段的起始x坐标
+    var slantLineStartY: Float = -1.0f// 斜线线段的起始y坐标
+    var slantLineEndX: Float = -1.0f// 斜线线段的结束x坐标
+    var slantLineEndY: Float = -1.0f// 斜线线段的结束y坐标
+    var textLineStartX: Float = -1.0f//
+    var textLineStartY: Float = -1.0f//
+    var textLineEndX: Float = -1.0f//
+    var textLineEndY: Float = -1.0f//
+    var textX: Float = -1.0f// 文本的起始x坐标
+    var textY: Float = -1.0f// 文本的起始Y坐标
+    var mPaint: Paint? = null//
+    var oval: RectF? = null//
+    var position: Int = -1//
+}

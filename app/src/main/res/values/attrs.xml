@@ -34,4 +34,14 @@
         <attr name="number_in_window" format="dimension" /><!-- 一个屏幕中可以分几分，只有数据源大于6个，并且is_compel_can_scroll为true时生效 -->
     </declare-styleable>
 
+    <declare-styleable name="pancake">
+        <attr name="pancake_background_color" format="color" /><!-- 底色 -->
+        <attr name="pancake_text_color" format="color" /><!-- 字的颜色 -->
+        <attr name="pancake_line_color" format="color" /><!-- 圆和字链接线的颜色 -->
+        <attr name="pancake_is_show_split_line" format="boolean" /><!-- 是否显示分割线 -->
+        <attr name="pancake_is_start_anim" format="boolean" /><!-- 是否是以动画的形式开始展示 -->
+        <attr name="pancake_is_show_small_circular" format="boolean" /><!-- 是否显示中心小圆 -->
+        <attr name="pancake_animator_duration" format="integer" /><!-- 是否显示中心小圆 -->
+
+    </declare-styleable>
 </resources>
