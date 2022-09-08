@@ -54,7 +54,9 @@
                 android:layout_height="300dp"
                 android:layout_marginTop="10dp"
                 app:background_color="@color/bessel_background"
-                app:is_left="true"
+                app:is_left="false"
+                app:linear_gradient_color_top="#FF1966ff"
+                app:linear_gradient_color_bottom="#80cc0000"
                 app:is_show_bezier_curve_line="false"
                 app:is_show_spot="true" />
 

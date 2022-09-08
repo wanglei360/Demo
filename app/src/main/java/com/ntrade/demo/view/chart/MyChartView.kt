@@ -141,7 +141,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                     //贝瑟尔曲线
                     bezierCurvePath.cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
                     //贝瑟尔曲线的渐变
-                    if (isShowGradualBackground) setGradualBackground(x, p1, p2, p3)
+                    if (isShowGradualBackground) setGradualBackgroundPath(x, p1, p2, p3)
                 }
             }
             //贝瑟尔曲线的渐变
@@ -323,7 +323,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             )
     }
 
-    private fun setGradualBackground(x: Int, p1: PointF, p2: PointF, p3: PointF) {
+    private fun setGradualBackgroundPath(x: Int, p1: PointF, p2: PointF, p3: PointF) {
         gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
         gradualBackgroundPath.cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
         gradualBackgroundPath.lineTo(p3.x, endY)
@@ -386,8 +386,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                     Color.parseColor("#FF018786")
                 ),
                 getColor(
-                    R.styleable.chart_linear_gradient_color_top,
-                    Color.parseColor("#FF018786")
+                    R.styleable.chart_linear_gradient_color_bottom,
+                    Color.parseColor("#8015AE9E")
                 )
             )
 
