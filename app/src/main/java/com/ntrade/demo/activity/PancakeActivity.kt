@@ -30,7 +30,7 @@ class PancakeActivity : Activity() {
             var x = 0
             var b = true
             while (b) {
-                val y = getRanNumber1(8, 40)
+                val y = getRanNumber1(4, 20)
                 if (x + y > 100) {
                     b = false
                     val num = get(size - 1) + (100 - x)

@@ -490,7 +490,10 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                     MotionEvent.ACTION_CANCEL -> isDown = false
                 }
             }
-            gestureDetector.onTouchEvent(event)
+            event?.apply {
+                gestureDetector.onTouchEvent(this)
+            }
+
             true
         } else super.onTouchEvent(event)
     }

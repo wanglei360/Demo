@@ -2,11 +2,31 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ntrade.demo">
 
+    <!-- 访问网络，进行地图相关业务数据请求，包括地图数据，路线规划，POI检索等 网络定位-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 获取网络状态，根据网络状态切换进行数据请求网络转换 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- todo 定位 这个权限用于访问GPS定位-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- todo 定位 用于访问wifi网络信息，wifi信息会用于进行网络定位-->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- todo 定位 这个权限用于获取wifi的获取权限，wifi信息会用来进行网络定位-->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- 网络权限-->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 写外置存储。 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- 读外置存储。-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:name=".App"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Demo">
@@ -26,6 +46,20 @@
         <activity android:name=".activity.SoundPoolActivity" />
         <activity android:name=".activity.BesselCurveActivity" />
         <activity android:name=".activity.PancakeActivity" />
+        <activity android:name="com.ntrade.map.MapActivity" />
+        <activity android:name="com.ntrade.map.BaiduActivity" />
+        <activity android:name="com.ntrade.map.SystemServiceLocationActivity" />
+        <activity android:name="com.ntrade.map.SystemServiceLocationTextShowActivity" />
+
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="s5CaroNqk6qXLopWcuWlAfDtdeKqldnT" />
+
+        <service
+            android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote" />
+
     </application>
 
 </manifest>

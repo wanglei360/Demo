@@ -1,6 +1,7 @@
 package com.ntrade.demo
 
 import android.app.Application
+import com.baidu.mapapi.SDKInitializer
 
 /** * 创建者：wanglei
  * <p>时间：2022/1/27 10:46
@@ -17,6 +18,10 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         context = this
+
+        SDKInitializer.setAgreePrivacy(applicationContext, true)
+        //在使用SDK各组件之前初始化context信息，传入ApplicationContext
+        SDKInitializer.initialize(applicationContext)
     }
 
 }

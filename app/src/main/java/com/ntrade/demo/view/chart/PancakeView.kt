@@ -30,7 +30,7 @@ class PancakeView : View {
     private var isStartAnim = true
 
     private var isAniming = false
-    private val radius = 200f//半径
+    private var radius = 0f//半径
     private var centerX = -1f
     private var centerY = -1f
     private var peripheralWidth = 30f//点击之后突出的那一块的宽度
@@ -104,6 +104,7 @@ class PancakeView : View {
         mHeight = h.toFloat()//控件的高  TSW19740324
         centerX = mWidth / 3
         centerY = mHeight / 2
+        radius = mWidth / 5
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -155,10 +156,10 @@ class PancakeView : View {
 
         drawArc(
             RectF(
-                (centerX - 62),
-                (centerY - 62),
-                (centerX + 62),
-                (centerY + 62)
+                (centerX - radius / 3),
+                (centerY - radius / 3),
+                (centerX + radius / 3),
+                (centerY + radius / 3)
             ),
             0f,  //开始角度
             360f,  //扫过的角度
@@ -325,6 +326,7 @@ class PancakeView : View {
 
     fun setDatas(datas: ArrayList<Int>) {
         mDatas.clear()
+        animator.cancel()
         oldSelPosition = -1
         angles = FloatArray(datas.size)
         var angle = 0f
