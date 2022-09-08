@@ -26,7 +26,8 @@ import kotlin.math.roundToInt
  */
 class MyChartView : View, GestureDetector.OnGestureListener {
     private var isShowSpot = true// 曲线上的点是否显示
-    private var isShowBezierCurveLine = true//曲线到底的竖线是否显示
+    private var isShowBezierCurveLine = true//曲线是否显示
+    private var isShowSpotToBottomLine = true//曲线到底的竖线是否显示
     private var isLeft = true
     private var isShowGradualBackground = true//是否显示渐变底色
     private var isCompelCanScroll = true//是否可以滚动,可以在布局中设置的参数
@@ -148,7 +149,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             if (isShowGradualBackground) drawPath(gradualBackgroundPath, linearGradientPaint)
 
             //贝瑟尔曲线
-            drawPath(bezierCurvePath, linePaint)
+            if (isShowBezierCurveLine) drawPath(bezierCurvePath, linePaint)
             mPoints.forEach {
                 drawSpotAndLine(it)//贝瑟尔曲线上的点
             }
@@ -261,11 +262,11 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             drawText(str, strX, strY, textPaint)
         }
         if (isLeft) {//表格最外的横线和竖线
-            drawLine(endX, startY, endX, endY, linePaint)
-            drawLine(0f, endY, endX, endY, linePaint)
+            drawLine(endX, startY, endX, endY, formPaint)
+            drawLine(0f, endY, endX, endY, formPaint)
         } else {
-            drawLine(startX, startY, startX, endY, linePaint)
-            drawLine(startX, endY, mWidth, endY, linePaint)
+            drawLine(startX, startY, startX, endY, formPaint)
+            drawLine(startX, endY, mWidth, endY, formPaint)
         }
     }
 
@@ -299,7 +300,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      */
     private fun Canvas.drawSpotAndLine(point: PointF) {
         //贝瑟尔曲线到底的竖线
-        if (isShowBezierCurveLine)
+        if (isShowSpotToBottomLine)
             drawLine(
                 point.x,
                 point.y,
@@ -402,6 +403,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             textPaint.textSize = getDimension(R.styleable.chart_scale_text_size, 30f)
             isShowBezierCurveLine =
                 getBoolean(R.styleable.chart_is_show_bezier_curve_line, true)
+            isShowSpotToBottomLine =
+                getBoolean(R.styleable.chart_is_show_spot_to_bottom_line, true)
             isLeft = getBoolean(R.styleable.chart_is_left, true)
             isShowGradualBackground = getBoolean(R.styleable.chart_is_show_gradual_background, true)
             isCompelCanScroll = getBoolean(R.styleable.chart_is_compel_can_scroll, true)

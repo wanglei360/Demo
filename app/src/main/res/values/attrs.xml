@@ -30,6 +30,7 @@
         <attr name="is_compel_can_scroll" format="boolean" /><!-- 是否可以滚动 -->
         <attr name="is_show_anim" format="boolean" /><!-- 是否展示动画 -->
         <attr name="is_show_spot" format="boolean" /><!-- 是否展示圆点 -->
+        <attr name="is_show_spot_to_bottom_line" format="boolean" /><!-- 是否展示圆点 -->
         <attr name="spot_radius" format="dimension" /><!-- 圆点的半径 -->
         <attr name="number_in_window" format="dimension" /><!-- 一个屏幕中可以分几分，只有数据源大于6个，并且is_compel_can_scroll为true时生效 -->
     </declare-styleable>

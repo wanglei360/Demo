@@ -55,10 +55,11 @@
                 android:layout_marginTop="10dp"
                 app:background_color="@color/bessel_background"
                 app:is_left="false"
-                app:linear_gradient_color_top="#FF1966ff"
+                app:is_show_bezier_curve_line="true"
+                app:is_show_spot="true"
+                app:is_show_spot_to_bottom_line="false"
                 app:linear_gradient_color_bottom="#80cc0000"
-                app:is_show_bezier_curve_line="false"
-                app:is_show_spot="true" />
+                app:linear_gradient_color_top="#FF1966ff" />
 
             <TextView
                 android:id="@+id/tv"
