@@ -2,8 +2,10 @@ package com.ntrade.demo.activity
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import com.ntrade.demo.databinding.ActivityBesselCurveLayoutBinding
+import com.ntrade.demo.view.chart.MChartData
 
 /** * 创建者：leiwu
  * * 时间：2022/8/26 09:46
@@ -19,26 +21,42 @@ class BesselCurveActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        binding.mChart.setOnItemClickListener { position, isDown ->
+            val s = if (position != -1)
+                list[position] else ""
+            Log.i("asdf", "position = $position   content = $s    isDown = $isDown")
+        }
     }
 
     fun btnClick1(v: View) {
-//        binding.waveView.startAnimation();
     }
 
+    private var list = ArrayList<MChartData>()
     fun btnClick(v: View) {
-        ArrayList<Int>().apply {
-            for (x in 0..100) {
-                add(getRanNumber1(0, 100))
+        val maxNum = 333
+        ArrayList<MChartData>().apply {
+            for (x in 0..8) {
+                val num = getRanNumber1(0, maxNum)
+                add(MChartData(maxNum, num, "111111111111111"))
             }
         }.apply {
+            add(2, MChartData(maxNum, 0, "111111111111111"))
+            add(MChartData(maxNum, 0, "111111111111111"))
             binding.mChart.setDatas(this)
             var str = ""
             var ssr = ""
             forEach {
-                str += "${it},"
-                ssr += "${360f / 100f * it}，"
+                str += "${it.point},"
             }
-            binding.tv.text = " $str \n  $ssr"
+            var sss = " $str \n  $ssr"
+            sss += sss
+            sss += sss
+            sss += sss
+            sss += sss
+            sss += sss
+            binding.tv.text = sss
+            list.clear()
+            list.addAll(this)
         }
     }
 
