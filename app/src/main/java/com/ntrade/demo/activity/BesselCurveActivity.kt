@@ -35,13 +35,13 @@ class BesselCurveActivity : Activity() {
     fun btnClick(v: View) {
         val maxNum = 333
         ArrayList<MChartData>().apply {
-            for (x in 0..8) {
+            for (x in 0..88) {
                 val num = getRanNumber1(0, maxNum)
-                add(MChartData(maxNum, num, "111111111111111"))
+                add(MChartData(maxNum, num, "  $num  "))
             }
         }.apply {
-            add(2, MChartData(maxNum, 0, "111111111111111"))
-            add(MChartData(maxNum, 0, "111111111111111"))
+            add(2, MChartData(maxNum, 0, "  0  "))
+            add(MChartData(maxNum, 0, "  0  "))
             binding.mChart.setDatas(this)
             var str = ""
             var ssr = ""

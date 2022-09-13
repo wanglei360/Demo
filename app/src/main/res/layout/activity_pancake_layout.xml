@@ -56,7 +56,7 @@
                 app:pancake_background_color="@color/color_caae7e"
                 app:pancake_is_show_small_circular="true"
                 app:pancake_is_show_split_line="false"
-                app:pancake_is_start_anim="false"
+                app:pancake_is_start_anim="true"
                 app:pancake_line_color="#1966ff"
                 app:pancake_text_color="#000" />
 
