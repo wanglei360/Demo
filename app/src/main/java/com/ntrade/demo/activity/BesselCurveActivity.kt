@@ -1,10 +1,14 @@
 package com.ntrade.demo.activity
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import com.ntrade.demo.databinding.ActivityBesselCurveLayoutBinding
+import com.ntrade.demo.pop.WPopup
+import com.ntrade.demo.pop.WPopupModel
 import com.ntrade.demo.view.chart.MChartData
 
 /** * 创建者：leiwu
@@ -17,15 +21,47 @@ import com.ntrade.demo.view.chart.MChartData
 class BesselCurveActivity : Activity() {
 
     private val binding by lazy { ActivityBesselCurveLayoutBinding.inflate(layoutInflater) }
+    private var scrollY = 0
+    private var mChartY = 0
+    private var wPopup: WPopup? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        binding.mChart.setOnItemClickListener { position, isDown ->
-            val s = if (position != -1)
-                list[position] else ""
-            Log.i("asdf", "position = $position   content = $s    isDown = $isDown")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            binding.mChart.setOnItemClickListener { position, isDown, pointX, pointY ->
+                if (isDown)
+                    showPopupWindow(position, pointX, pointY)
+                else wPopup?.dismiss()
+            }
+            binding.mSv.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+                this@BesselCurveActivity.scrollY = scrollY
+            }
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        mChartY = binding.topView.height
+    }
+
+    private fun showPopupWindow(position: Int, pointX: Float, pointY: Float) {
+        val poputData = ArrayList<WPopupModel>()
+        poputData.add(WPopupModel(list[position].bottomStr))
+        WPopup.Builder(this)
+            .setData(poputData)    // 设置数据，数据类为WPopupModel
+            .setCancelable(true) // 设置是否能点击外面dismiss
+            .setIsShowTriangle(false)
+            .setPopupOrientation(WPopup.Builder.VERTICAL)   // 设置item排列方向 默认为竖向排列
+            .create().also {
+                it.showAtLocation(
+                    binding.root,
+                    Gravity.NO_GRAVITY,
+                    pointX.toInt(),
+                    pointY.toInt() - scrollY + mChartY
+                )
+                wPopup = it
+            }
     }
 
     fun btnClick1(v: View) {

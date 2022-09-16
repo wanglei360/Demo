@@ -18,6 +18,7 @@ import android.view.View
 import android.widget.OverScroller
 import androidx.core.view.GestureDetectorCompat
 import com.ntrade.demo.R
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 
@@ -60,12 +61,13 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private var longPressX = -1f
     private var longPressY = -1f
     private var longPressTime = 0L
+    private var firstShowPosition = -1
     private var isDown = false
     private var isCanScroll = true//是否可以滚动
     private var isAniming = false
     private var isLongPress = false//长按
 
-    private var itemClickListener: ((Int, Boolean) -> Unit)? = null
+    private var itemClickListener: ((Int, Boolean, Float, Float) -> Unit)? = null
     private val datas by lazy { ArrayList<MChartData>() }
     private val mPoints = ArrayList<PointF>()
     private val positionInfos = ArrayList<MChartPointPositionInfo>()
@@ -200,11 +202,11 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             drawScale()// 画刻度上的字和刻度的竖线和横线
             //画一个蒙版越来越小来当做动画,用其他方法计算找能用的方法实在是太费劲了，还不如这个方法简单
             if (isShowAnim) mAnim()
-            if (isLongPress) test()
-        }
+            if (isLongPress) drawLongPressLine()
+        }//
     }
 
-    private fun Canvas.test() {
+    private fun Canvas.drawLongPressLine() {
         drawLine(longPressX - 6, 0f, longPressX + 6, mHeight, linePaint)
         drawLine(0f, longPressY - 6, mWidth, longPressY + 6, linePaint)
     }
@@ -213,7 +215,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      * Int      是数据源的position
      * Boolean  true是按下的回调，false是抬起的回调
      */
-    fun setOnItemClickListener(itemClickListener: (Int, Boolean) -> Unit) {
+    fun setOnItemClickListener(itemClickListener: (Int, Boolean, Float, Float) -> Unit) {
         this.itemClickListener = itemClickListener
     }
 
@@ -565,10 +567,10 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         ).toInt()
     }
 
-    private fun checkClick(info: MChartPointPositionInfo) {
+    private fun checkClick(info: MChartPointPositionInfo, pointX: Float, pointY: Float) {
         val time = System.currentTimeMillis()
         if (time - longPressTime > 200)
-            itemClickListener?.invoke(info.position, true)
+            itemClickListener?.invoke(info.position, true, pointX, pointY)
         longPressTime = time
     }
 
@@ -593,30 +595,40 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private fun setFirstShowInfo() {
         positionInfos.clear()
         if (isLeft) {
-            val firstShowPosition = ((mScroolX - 10 + aPartWidth) / aPartWidth).toInt()
-            val width = mWidth - (blankWidth - aPartWidth)
-            val firstPointX = width + mScroolX
-            val firstShowPointX = firstPointX - (firstShowPosition * aPartWidth)
-            positionInfos.add(MChartPointPositionInfo(firstShowPosition, firstShowPointX))
-            var index = 1
-            while (firstShowPointX - aPartWidth * index > 0) {
-                positionInfos.add(
-                    MChartPointPositionInfo(
-                        firstShowPosition + index,
-                        firstShowPointX - aPartWidth * index
+            firstShowPosition = ((mScroolX - 10 + aPartWidth) / aPartWidth).toInt()
+            val position = mPoints.size - 1 - firstShowPosition
+            var index = 0
+            while (position > 0) {
+                val firstX = mPoints[position].x + mScroolX - (aPartWidth * index)
+                if (firstX > 0) {
+                    positionInfos.add(
+                        MChartPointPositionInfo(
+                            firstShowPosition + index,
+                            firstX + 6,
+                            mPoints[position - index].y
+                        )
                     )
-                )
+                } else break
                 index++
             }
         } else {
             val firstPointX = blankWidth - aPartWidth + mScroolX + spotRadius
-            for (index in 0 until mPoints.size) {
-                val pointX = firstPointX + aPartWidth * index
-                if (pointX > startX) {
-                    if (pointX < mWidth) {
-                        positionInfos.add(MChartPointPositionInfo(index, pointX))
-                    } else break
-                }
+            firstShowPosition =
+                if (mScroolX >= 0) 0
+                else (abs(mScroolX) / aPartWidth).toInt() + 1
+
+            var pointX: Float
+            for (index in firstShowPosition until mPoints.size) {
+                pointX = firstPointX + aPartWidth * index
+                if (pointX < mWidth) {
+                    positionInfos.add(
+                        MChartPointPositionInfo(
+                            index,
+                            pointX + spotRadius,
+                            mPoints[index].y
+                        )
+                    )
+                } else break
             }
         }
     }
@@ -629,13 +641,13 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                     MotionEvent.ACTION_UP -> {
                         isLongPress = false
                         isDown = false
-                        itemClickListener?.invoke(-1, false)
+                        itemClickListener?.invoke(-1, false, -1f, -1f)
                         postInvalidate()
                     }
                     MotionEvent.ACTION_CANCEL -> {
                         isDown = false
                         isLongPress = false
-                        itemClickListener?.invoke(-1, false)
+                        itemClickListener?.invoke(-1, false, -1f, -1f)
                         postInvalidate()
                     }
                     MotionEvent.ACTION_MOVE -> {
@@ -646,11 +658,17 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                             if (isLongPress) {
                                 try {//防止positionInfos导致的崩溃，基本不会出现问题
                                     for (y in 0 until positionInfos.size) {
-                                        if (x > positionInfos[y].positionX - spotRadius && x < positionInfos[y].positionX + spotRadius) {
-                                            checkClick(positionInfos[y])
-                                            break
+                                        if (x in positionInfos[y].positionX - spotRadius - 6..positionInfos[y].positionX + spotRadius) {
+                                            checkClick(
+                                                positionInfos[y],
+                                                positionInfos[y].positionX,
+                                                positionInfos[y].positionY
+                                            )
+                                            gestureDetector.onTouchEvent(this)
+                                            return true
                                         }
                                     }
+                                    itemClickListener?.invoke(-1, false, -1f, -1f)
                                 } catch (e: Exception) {
                                 }
                             }
@@ -767,5 +785,5 @@ data class MChartData(
 data class MChartPointPositionInfo(
     val position: Int,
     val positionX: Float,
-
-    )
+    val positionY: Float,
+)

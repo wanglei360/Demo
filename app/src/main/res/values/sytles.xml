@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="popAnimFriendCircle">
+        <item name="android:windowEnterAnimation">@anim/pop_anim_friend_circle_in</item>
+        <item name="android:windowExitAnimation">@anim/pop_anim_friend_circle_out</item>
+    </style>
+
+    <style name="popAnimScaleY">
+        <item name="android:windowEnterAnimation">@anim/pop_anim_scale_y_in</item>
+        <item name="android:windowExitAnimation">@anim/pop_anim_scale_y_out</item>
+    </style>
+
+    <style name="popAnimAlpha">
+        <item name="android:windowEnterAnimation">@anim/pop_anim_alpha_in</item>
+        <item name="android:windowExitAnimation">@anim/pop_anim_alpha_out</item>
+    </style>
+
+</resources>

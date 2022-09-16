@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import com.ntrade.demo.databinding.ActivityPancakeLayoutBinding
-import com.ntrade.demo.tool.ToastUtil
 
 /** * 创建者：leiwu
  * * 时间：2022/8/31 09:41

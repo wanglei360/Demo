@@ -7,13 +7,14 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/topView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@color/teal_200"
             android:gravity="center"
@@ -24,12 +25,12 @@
 
         <View
             android:layout_width="3dp"
-            android:layout_height="60dp"
+            android:layout_height="match_parent"
             android:background="@color/black" />
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@color/teal_200"
             android:gravity="center"
@@ -40,6 +41,7 @@
     </LinearLayout>
 
     <com.ntrade.demo.view.chart.MScrollView
+        android:id="@+id/mSv"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -53,12 +55,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:layout_marginTop="10dp"
-                app:background_color="@color/bessel_background"
-                app:is_left="true"
+                app:background_color="@color/bessel_gradual1"
+                app:is_left="false"
                 app:is_show_bezier_curve_line="false"
                 app:is_show_spot="true"
                 app:is_show_spot_to_bottom_line="true"
-                app:linear_gradient_color_bottom="#80cc0000"
+                app:linear_gradient_color_bottom="#99cc0000"
                 app:linear_gradient_color_top="#FF1966ff" />
 
             <TextView
