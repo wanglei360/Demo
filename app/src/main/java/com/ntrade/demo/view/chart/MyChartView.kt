@@ -5,10 +5,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.os.*
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
@@ -18,6 +15,8 @@ import android.view.View
 import android.widget.OverScroller
 import androidx.core.view.GestureDetectorCompat
 import com.ntrade.demo.R
+import com.ntrade.demo.bean.MChartData
+import com.ntrade.demo.bean.MChartPointPositionInfo
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -27,10 +26,12 @@ import kotlin.math.roundToInt
  * * 类描述：
  * * 修改人：
  * * 修改时间：
- * * 备注：使用该View需要在清单文件中添加震动权限 android.permission.VIBRATE ，不需要申请用户同意
+ * * 备注：使用该View需要在清单文件中添加震动权限 android.permission.VIBRATE ，不需要申请用户同意,长按时有用到
+ * * 经测试，数据量达到5万条数据仍然没有丝毫卡顿，优化过，就算是五百万，除非是内存溢出或计算的数字类型int或float超长会崩溃，否则没有问题
  */
 class MyChartView : View, GestureDetector.OnGestureListener {
-    private var isShowSpot = true// 曲线上的点是否显示
+
+    private var isBezierCurve = true// 显示的是否是曲线
     private var isShowBezierCurveLine = true//曲线是否显示
     private var isShowSpotToBottomLine = true//曲线到底的竖线是否显示
     private var isLeft = true // 曲线在屏幕的左边是true ,否则是false
@@ -62,14 +63,22 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private var longPressY = -1f
     private var longPressTime = 0L
     private var firstShowPosition = -1
+    private var lastShowPosition = -1
+    private var bottomStrWidth = -1f
+    private var bottomStrHeight = -1
     private var isDown = false
     private var isCanScroll = true//是否可以滚动
     private var isAniming = false
     private var isLongPress = false//长按
 
+    /**
+     * position,isSel,pointX,pointY
+     */
     private var itemClickListener: ((Int, Boolean, Float, Float) -> Unit)? = null
     private val datas by lazy { ArrayList<MChartData>() }
     private val mPoints = ArrayList<PointF>()
+
+    private val bezierCurve = ArrayList<ArrayList<PointF>>()
     private val positionInfos = ArrayList<MChartPointPositionInfo>()
     private val mPath by lazy { Path() }
     private val gradualBackgroundPath by lazy { Path() }
@@ -99,11 +108,14 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private val linePaint by lazy {
         getPaint(getColor(R.color.bessel_line), 4, Paint.Style.STROKE)
     }
+
     private val formPaint by lazy {
         getPaint(getColor(R.color.bessel_from_line), 2, Paint.Style.STROKE)
     }
-    var linearGradientColors =
+
+    private var linearGradientColors =
         intArrayOf(getColor(R.color.bessel_gradual1), getColor(R.color.bessel_gradual2))
+
     private val linearGradientPaint by lazy {
         getPaint(getColor(R.color.teal_700), 1, Paint.Style.FILL).apply {
             alpha = 255
@@ -114,9 +126,11 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private val spotPaint by lazy {
         getPaint(getColor(R.color.bessel_text), 1, Paint.Style.FILL_AND_STROKE)
     }
+
     private val backgroundPaint by lazy {
         getPaint(mBackgroundColor, 1, Paint.Style.FILL_AND_STROKE)
     }
+
     private val textPaint by lazy {
         getPaint(
             getColor(R.color.bessel_text),
@@ -126,10 +140,11 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             textSize = dp2px(10f).toFloat()
         }
     }
+
     private val gestureDetector by lazy { GestureDetectorCompat(context, this) }
     private val overScroller by lazy { OverScroller(context) }
 
-    constructor(context: Context?) : super(context) {}
+    constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
         initAttrs(attrs)
     }
@@ -150,17 +165,152 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         setDatas()
     }
 
-    @SuppressLint("MissingPermission")
-    private fun shock(foo: () -> Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.apply {
-                if (hasVibrator()) {//判断硬件是否有振动器。
-                    cancel()//关闭或者停止振动器。 VibrationEffect.DEFAULT_AMPLITUDE
-                    vibrate(VibrationEffect.createOneShot(46, VibrationEffect.DEFAULT_AMPLITUDE))
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.apply {
+            if (mPoints.isEmpty()) {
+                setDefaultChart()
+                return
+            }
+
+            drawForm()// 底格的横线
+            save()
+            translate(mScroolX, 0f)// 平移
+            drawChartLine()//曲线和渐变的背景
+            drawSpotAndLine()//曲线上的点 和 曲线到底的竖线
+            drawBottomNumber()// 画底部的数字
+            restore()
+            drawScale()// 画刻度上的字和刻度的竖线和横线
+            //画一个蒙版越来越小来当做动画,用其他方法计算找能用的方法实在是太费劲了，还不如这个方法简单
+            if (isShowAnim) mAnim()
+            if (isLongPress) drawLongPressLine()
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return if (isCanScroll && !isAniming) {
+            event?.apply {
+                when (action) {
+                    MotionEvent.ACTION_DOWN -> isDown = true
+                    MotionEvent.ACTION_UP -> {
+                        isLongPress = false
+                        isDown = false
+                        itemClickListener?.invoke(-1, false, -1f, -1f)
+                        postInvalidate()
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        isDown = false
+                        isLongPress = false
+                        itemClickListener?.invoke(-1, false, -1f, -1f)
+                        postInvalidate()
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        itemClickListener?.also {
+                            longPressX = x
+                            longPressY = y
+                            postInvalidate()
+                            if (isLongPress) {
+                                try {//防止positionInfos导致的崩溃，基本不会出现问题
+                                    for (y in 0 until positionInfos.size) {
+                                        if (x in positionInfos[y].positionX - spotRadius - 6..positionInfos[y].positionX + spotRadius) {
+                                            checkClick(
+                                                positionInfos[y],
+                                                positionInfos[y].positionX,
+                                                positionInfos[y].positionY
+                                            )
+                                            gestureDetector.onTouchEvent(this)
+                                            return true
+                                        }
+                                    }
+                                    itemClickListener?.invoke(-1, false, -1f, -1f)
+                                } catch (e: Exception) {
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            event?.apply {
+                gestureDetector.onTouchEvent(this)
+            }
+            true
+        } else super.onTouchEvent(event)
+    }
+
+    /**
+     * onFling 方法中调用fling时，此方法会被调用
+     */
+    override fun computeScroll() {
+        if (overScroller.computeScrollOffset()) {
+            if (!isDown) {
+                scrollTo(overScroller.currX, overScroller.currY)
+                postInvalidate()
+            }
         }
-        foo.invoke()
+    }
+
+    override fun scrollTo(x: Int, y: Int) {
+        val oldX = mScroolX
+        mScroolX = x.toFloat()
+        checkMScroolX()
+        if (mScroolX != oldX) {
+            onScrollChanged(mScroolX.toInt(), 0, oldX.toInt(), 0)
+        }
+    }
+
+    override fun onDown(e: MotionEvent?): Boolean {
+        return false
+    }
+
+    override fun onShowPress(e: MotionEvent?) {
+    }
+
+    override fun onSingleTapUp(e: MotionEvent?): Boolean {
+        return false
+    }
+
+    /**
+     * 手指在屏幕上左右滑动时调用
+     */
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent?,
+        distanceX: Float,
+        distanceY: Float
+    ): Boolean {
+        mScroolX -= distanceX
+        checkMScroolX()
+        postInvalidate()
+        return true
+    }
+
+    /**
+     * 长按回调
+     */
+    override fun onLongPress(e: MotionEvent?) {
+        itemClickListener?.apply {
+            shock {
+                isLongPress = true
+            }
+        }
+    }
+
+    /**
+     * 手指在屏幕上滑动抬起时，需要惯性滚动，此方法被调用
+     * @param velocityX 横着滚动的速度
+     */
+    override fun onFling(
+        e1: MotionEvent?,
+        e2: MotionEvent?,
+        velocityX: Float,
+        velocityY: Float
+    ): Boolean {
+        overScroller.fling(
+            mScroolX.toInt(), 0, (velocityX / 2).roundToInt(), 0, Int.MIN_VALUE, Int.MAX_VALUE,
+            0, 0
+        )
+        return true
     }
 
     private fun Canvas.setDefaultChart() {
@@ -168,93 +318,82 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         drawScale()// 画刻度上的字和刻度的竖线和横线
     }
 
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        gradualBackgroundPath.reset()
-        bezierCurvePath.reset()
-        if (mPoints.isEmpty()) {
-            canvas?.setDefaultChart()
-            return
+    private fun Canvas.drawChartLine() {
+        if (isBezierCurve)
+            drawBezier()//曲线和渐变底色
+        else drawLine()
+    }
+
+    private fun Canvas.drawLine() {
+        getLoopNums(mPoints) { smallNum, bigNum ->
+            for (x in smallNum..bigNum) {
+                drawLine(
+                    mPoints[x].x,
+                    mPoints[x].y,
+                    mPoints[x + 1].x,
+                    mPoints[x + 1].y,
+                    linePaint
+                )
+                gradualBackgroundPath.reset()
+                gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
+                gradualBackgroundPath.lineTo(mPoints[x].x, endY)
+                gradualBackgroundPath.lineTo(mPoints[x + 1].x, endY)
+                gradualBackgroundPath.lineTo(mPoints[x + 1].x, mPoints[x + 1].y)
+                gradualBackgroundPath.close()
+                drawPath(gradualBackgroundPath, linearGradientPaint)
+            }
         }
-        canvas?.apply {
-            drawForm()// 底格的横线
-            save()
-            translate(mScroolX, 0f)// 平移
-            for (x in 0 until mPoints.size - 1) {
-                bezierCurvePath.moveTo(mPoints[x].x, mPoints[x].y)
-                getBezierCurveValue(mPoints[x], mPoints[x + 1]) { p1, p2, p3 ->
-                    //贝瑟尔曲线
-                    bezierCurvePath.cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
-                    //贝瑟尔曲线的渐变
-                    if (isShowGradualBackground) setGradualBackgroundPath(x, p1, p2, p3)
+    }
+
+    private fun Canvas.drawBezier() {
+        getLoopNums(bezierCurve) { smallNum, bigNum ->
+            for (x in smallNum..bigNum) {
+                bezierCurve[x].also {
+                    if (it.isNotEmpty()) {
+                        //贝瑟尔曲线
+                        if (isShowBezierCurveLine) drawBezierCurve(it)
+
+                        //贝瑟尔曲线的渐变
+                        if (isShowGradualBackground) drawGradualBackground(it)
+                    }
                 }
             }
-            //贝瑟尔曲线的渐变
-            if (isShowGradualBackground) drawPath(gradualBackgroundPath, linearGradientPaint)
+        }
+    }
 
-            //贝瑟尔曲线
-            if (isShowBezierCurveLine) drawPath(bezierCurvePath, linePaint)
-            mPoints.forEach {
-                drawSpotAndLine(it)//贝瑟尔曲线上的点
-            }
-            drawBottomNumber()// 画底部的数字
-            restore()
-            drawScale()// 画刻度上的字和刻度的竖线和横线
-            //画一个蒙版越来越小来当做动画,用其他方法计算找能用的方法实在是太费劲了，还不如这个方法简单
-            if (isShowAnim) mAnim()
-            if (isLongPress) drawLongPressLine()
-        }//
+    private fun Canvas.drawBezierCurve(point: ArrayList<PointF>) {
+        bezierCurvePath.reset()
+        bezierCurvePath.moveTo(point[0].x, point[0].y)
+        bezierCurvePath.cubicTo(
+            point[1].x,
+            point[1].y,
+            point[2].x,
+            point[2].y,
+            point[3].x,
+            point[3].y
+        )
+        drawPath(bezierCurvePath, linePaint)
+    }
+
+    private fun Canvas.drawGradualBackground(point: ArrayList<PointF>) {
+        gradualBackgroundPath.reset()
+        gradualBackgroundPath.moveTo(point[0].x, point[0].y)
+        gradualBackgroundPath.cubicTo(
+            point[1].x,
+            point[1].y,
+            point[2].x,
+            point[2].y,
+            point[3].x,
+            point[3].y
+        )
+        gradualBackgroundPath.lineTo(point[3].x, endY)
+        gradualBackgroundPath.lineTo(point[0].x, endY)
+        drawPath(gradualBackgroundPath, linearGradientPaint)
     }
 
     private fun Canvas.drawLongPressLine() {
         drawLine(longPressX - 6, 0f, longPressX + 6, mHeight, linePaint)
         drawLine(0f, longPressY - 6, mWidth, longPressY + 6, linePaint)
-    }
-
-    /**
-     * Int      是数据源的position
-     * Boolean  true是按下的回调，false是抬起的回调
-     */
-    fun setOnItemClickListener(itemClickListener: (Int, Boolean, Float, Float) -> Unit) {
-        this.itemClickListener = itemClickListener
-    }
-
-    fun setDatas(list: ArrayList<MChartData>? = null) {
-        datas.clear()
-        mPoints.clear()
-        if (list.isNullOrEmpty()) {
-            this@MyChartView.maxNum = 100
-            initFoundationSize()
-            postInvalidate()
-        } else {
-            mScroolX = 0f
-            datas.addAll(
-                if (isLeft) list.reversed()
-                else list
-            )
-
-            this@MyChartView.maxNum = list[0].maxNum
-            initFoundationSize {
-                var index = 0
-                datas.forEach {
-                    val x =
-                        if (isLeft) aPartWidth * index + startX
-                        else aPartWidth * index + blankWidth + textAndLineClearance
-
-                    val y =
-                        (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
-                    mPoints.add(PointF(x, y))
-                    index++
-                }
-            }
-            itemClickListener?.apply { setFirstShowInfo() }
-            if (isShowAnim) {
-                animWidth =
-                    mWidth - (textPaint.measureText("$maxNum") + margin + textAndLineClearance + linePaint.strokeWidth / 2)
-                animator.cancel()
-                animator.start()
-            } else postInvalidate()
-        }
     }
 
     private fun Canvas.mAnim() {
@@ -301,15 +440,15 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
         mPath.reset()// 左或右竖着字的背景
         if (isLeft) {
-            mPath.moveTo(endX, 0f) //移动画笔到指定位置
-            mPath.lineTo(endX, endY) //移动画笔到指定位置
-            mPath.lineTo(endX + hundredWidth / 2, endY) //移动画笔到指定位置
-            mPath.lineTo(endX + hundredWidth / 2, mHeight) //移动画笔到指定位置
+            mPath.moveTo(endX, 0f)
+            mPath.lineTo(endX, endY)
+            mPath.lineTo(endX + hundredWidth / 2, endY)
+            mPath.lineTo(endX + hundredWidth / 2, mHeight)
             mPath.lineTo(mWidth, mHeight)
             mPath.lineTo(mWidth, 0f)
             mPath.close()
         } else {
-            mPath.moveTo(0f, 0f) //移动画笔到指定位置
+            mPath.moveTo(0f, 0f)
             mPath.lineTo(startX, 0f)
             mPath.lineTo(startX, endY)
             mPath.lineTo(startX - hundredWidth / 2, endY)
@@ -359,56 +498,52 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         mPath.close()
         drawPath(mPath, backgroundPaint)
 
-        val strHeight = measureHeight(textPaint) / 2
+        bottomStrHeight = measureHeight(textPaint) / 2
         var strX: Float
         var strY: Float
         var str: String
-        for (x in 0 until datas.size) {//画底部的数字
-            str = datas[x].bottomStr
-            val textWidth = textPaint.measureText(str)
-            strX = mPoints[x].x - textWidth / 2
-            strY = endY + strHeight * 2 + spotRadius
-            drawText(str, strX, strY, textPaint)
+        getLoopNums(mPoints) { smallNum, bigNum ->
+            for (x in smallNum..bigNum) {//画底部的数字
+                str = datas[x].bottomStr
+                val textWidth = textPaint.measureText(str)
+                strX = mPoints[x].x - textWidth / 2
+                strY = endY + bottomStrHeight * 2 + spotRadius
+                drawText(str, strX, strY, textPaint)
+            }
         }
     }
 
     /**
      * 画贝瑟尔曲线的点和点到底部的竖线
      */
-    private fun Canvas.drawSpotAndLine(point: PointF) {
-        //贝瑟尔曲线到底的竖线
-        if (isShowSpotToBottomLine)
-            drawLine(
-                point.x,
-                point.y,
-                point.x,
-                endY,
-                formPaint
-            )
-        //贝瑟尔曲线上的点
-        if (isShowSpot)
-            drawArc(
-                RectF(//弧线所使用的矩形区域大小
-                    point.x - spotRadius,
-                    point.y - spotRadius,
-                    point.x + spotRadius,
-                    point.y + spotRadius
-                ),
-                0f,  //开始角度
-                -360f,  //扫过的角度
-                true,  //是否使用中心
-                spotPaint
-            )
+    private fun Canvas.drawSpotAndLine() {
+        getLoopNums(mPoints) { smallNum, bigNum ->
+            for (x in smallNum..bigNum) {
+                //曲线到底的竖线
+                if (isShowSpotToBottomLine)
+                    drawLine(
+                        mPoints[x].x,
+                        mPoints[x].y,
+                        mPoints[x].x,
+                        endY,
+                        formPaint
+                    )
+                //曲线上的点
+                drawArc(
+                    RectF(//弧线所使用的矩形区域大小
+                        mPoints[x].x - spotRadius,
+                        mPoints[x].y - spotRadius,
+                        mPoints[x].x + spotRadius,
+                        mPoints[x].y + spotRadius
+                    ),
+                    0f,  //开始角度
+                    -360f,  //扫过的角度
+                    true,  //是否使用中心
+                    spotPaint
+                )
+            }
+        }
     }
-
-    private fun setGradualBackgroundPath(x: Int, p1: PointF, p2: PointF, p3: PointF) {
-        gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
-        gradualBackgroundPath.cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
-        gradualBackgroundPath.lineTo(p3.x, endY)
-        gradualBackgroundPath.lineTo(mPoints[x].x, endY)
-    }
-
-    private fun getColor(id: Int): Int = context.resources.getColor(id)
 
     /**
      * 底格的横线
@@ -486,7 +621,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             isShowGradualBackground = getBoolean(R.styleable.chart_is_show_gradual_background, true)
             isCompelCanScroll = getBoolean(R.styleable.chart_is_compel_can_scroll, true)
             isShowAnim = getBoolean(R.styleable.chart_is_show_anim, true)
-            isShowSpot = getBoolean(R.styleable.chart_is_show_spot, true)
+            isBezierCurve = getBoolean(R.styleable.chart_is_bezier_curve, true)
             spotRadius = getDimension(R.styleable.chart_spot_radius, 10f)
         }
     }
@@ -495,6 +630,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      * 每次更新数据最好初始化一下基础尺寸，以免图因为数据量不同而混乱
      */
     private fun initFoundationSize(foo: (() -> Unit)? = null) {
+        bottomStrWidth = -1f
         val size = if (datas.isEmpty()) 1 else datas.size
         hundredWidth = textPaint.measureText("$maxNum")
         blankWidth = hundredWidth + textAndLineClearance + margin//空白处的宽度
@@ -507,9 +643,11 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             } else {
                 aPartWidth
             }.let {
-                val bottomStr = datas.let { if (it.isEmpty()) "" else it[0].bottomStr }
+                val bottomStr = datas.let { data -> if (data.isEmpty()) "" else data[0].bottomStr }
                 val bottomStrWidth = textPaint.measureText(bottomStr)
                 val width = if (it > bottomStrWidth) it else bottomStrWidth
+                if (this@MyChartView.bottomStrWidth < bottomStrWidth)
+                    this@MyChartView.bottomStrWidth = bottomStrWidth
                 width + textAndLineClearance
             }
         if (isLeft) {
@@ -559,53 +697,62 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         return fm.top.inv() - (fm.top.inv() - fm.ascent.inv()) - (fm.bottom - fm.descent)
     }
 
-    private fun dp2px(dpValue: Float): Int {
+    private fun dp2px(value: Float): Int {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
-            dpValue,
+            value,
             context.resources.displayMetrics
         ).toInt()
     }
 
     private fun checkClick(info: MChartPointPositionInfo, pointX: Float, pointY: Float) {
         val time = System.currentTimeMillis()
-        if (time - longPressTime > 200)
+        if (time - longPressTime > 200) {
+            longPressTime = time
             itemClickListener?.invoke(info.position, true, pointX, pointY)
+        }
         longPressTime = time
     }
 
     private fun checkMScroolX() {
         if (isLeft) {
             val leftBoundary =
-                chartWidth - mWidth + blankWidth - aPartWidth + margin * 2 + hundredWidth
+                chartWidth - mWidth + bottomStrWidth / 2 + margin * 2 + hundredWidth
+            val num = if (-margin < -bottomStrWidth / 2) -margin else -bottomStrWidth / 2
             when {
                 mScroolX > leftBoundary -> mScroolX = leftBoundary
-                mScroolX < -margin -> mScroolX = -margin
+                mScroolX < num -> mScroolX = num
             }
         } else {
+            val bigNum = if (spotRadius > bottomStrWidth / 2) spotRadius else bottomStrWidth / 2
             when {
-                mScroolX > 0 -> mScroolX = spotRadius
-                mScroolX < mWidth - (chartWidth + spotRadius + hundredWidth * 2) -> mScroolX =
-                    mWidth - (chartWidth + spotRadius + hundredWidth * 2)
+                mScroolX > bigNum -> mScroolX = bigNum
+                mScroolX < mWidth - (chartWidth + bigNum + margin * 2 + hundredWidth) -> mScroolX =
+                    mWidth - (chartWidth + bigNum + margin * 2 + hundredWidth)
             }
         }
-        itemClickListener?.apply { setFirstShowInfo() }
+        setFirstShowInfo()
     }
 
+    /**
+     * 不能优化掉该方法，必须实时调用
+     * 画曲线和点时需要用到 firstShowPosition 和 lastShowPosition
+     * 如果这两个值不准，画的图会出错
+     */
     private fun setFirstShowInfo() {
         positionInfos.clear()
         if (isLeft) {
             firstShowPosition = ((mScroolX - 10 + aPartWidth) / aPartWidth).toInt()
-            val position = mPoints.size - 1 - firstShowPosition
+            val pointPosition = mPoints.size - 1 - firstShowPosition
             var index = 0
-            while (position > 0) {
-                val firstX = mPoints[position].x + mScroolX - (aPartWidth * index)
+            while (pointPosition > 0) {
+                val firstX = mPoints[pointPosition].x + mScroolX - (aPartWidth * index)
                 if (firstX > 0) {
                     positionInfos.add(
                         MChartPointPositionInfo(
                             firstShowPosition + index,
                             firstX + 6,
-                            mPoints[position - index].y
+                            mPoints[pointPosition - index].y
                         )
                     )
                 } else break
@@ -631,135 +778,196 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 } else break
             }
         }
+        lastShowPosition = positionInfos[positionInfos.size - 1].position
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return if (isCanScroll && !isAniming) {
-            event?.apply {
-                when (action) {
-                    MotionEvent.ACTION_DOWN -> isDown = true
-                    MotionEvent.ACTION_UP -> {
-                        isLongPress = false
-                        isDown = false
-                        itemClickListener?.invoke(-1, false, -1f, -1f)
-                        postInvalidate()
+    private fun setPoints() {
+        var index = 0
+        datas.forEach {
+            val x =
+                if (isLeft) aPartWidth * index + startX
+                else aPartWidth * index + blankWidth + textAndLineClearance
+
+            val y =
+                (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
+            mPoints.add(PointF(x, y))
+            index++
+        }
+    }
+
+    /*
+    p1是否有有弧度，取决于前一个点的p2，p2是否有弧度要看下一个点是否比当前点大很多，小于20（这个数待验证）就不该有弧度
+     */
+    private fun setBezierDatas() {
+        var index = 0
+        var p1Radian = false
+        bezierCurve.clear()
+        mPoints.forEach { _ ->
+            ArrayList<PointF>().also {
+                bezierCurve.add(it)
+                when (index) {
+                    0 -> {
+                        getBezierCurveValue(mPoints[index], mPoints[index + 1]) { p1, p2, p3 ->
+                            val pp0 = PointF(mPoints[index].x, mPoints[index].y)
+                            it.add(pp0)
+                            it.add(p1)
+
+                            getP2(index, p2) { pp3, newP1Radian ->
+                                p1Radian = newP1Radian
+                                it.add(pp3)
+                            }
+                            it.add(p3)
+                        }
                     }
-                    MotionEvent.ACTION_CANCEL -> {
-                        isDown = false
-                        isLongPress = false
-                        itemClickListener?.invoke(-1, false, -1f, -1f)
-                        postInvalidate()
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        itemClickListener?.also {
-                            longPressX = x
-                            longPressY = y
-                            postInvalidate()
-                            if (isLongPress) {
-                                try {//防止positionInfos导致的崩溃，基本不会出现问题
-                                    for (y in 0 until positionInfos.size) {
-                                        if (x in positionInfos[y].positionX - spotRadius - 6..positionInfos[y].positionX + spotRadius) {
-                                            checkClick(
-                                                positionInfos[y],
-                                                positionInfos[y].positionX,
-                                                positionInfos[y].positionY
-                                            )
-                                            gestureDetector.onTouchEvent(this)
-                                            return true
+                    mPoints.size - 1 -> {}
+                    else -> {
+                        getBezierCurveValue(mPoints[index], mPoints[index + 1]) { p1, p2, p3 ->
+                            val pp1 = PointF(mPoints[index].x, mPoints[index].y)
+                            val pp2 =
+                                if (p1Radian) {
+                                    val currentMiddleY =
+                                        abs(mPoints[index + 1].y - mPoints[index].y) / 2
+                                    val previousMiddleY =
+                                        abs(mPoints[index - 1].y - mPoints[index].y) / 2
+                                    if (currentMiddleY > previousMiddleY) {
+                                        previousMiddleY
+                                    } else {
+                                        currentMiddleY
+                                    }.let { smallMiddleY ->
+                                        val middleY =
+                                            if (smallMiddleY > chartHeight / 5) chartHeight / 5 else smallMiddleY
+                                        if (mPoints[index].y > mPoints[index + 1].y) {
+                                            PointF(p1.x, mPoints[index].y - middleY)
+                                        } else {
+                                            PointF(p1.x, mPoints[index].y + middleY)
                                         }
                                     }
-                                    itemClickListener?.invoke(-1, false, -1f, -1f)
-                                } catch (e: Exception) {
-                                }
+                                } else p1
+                            it.add(pp1)
+                            it.add(pp2)
+                            getP2(index, p2) { pp3, newP1Radian ->
+                                p1Radian = newP1Radian
+                                it.add(pp3)
                             }
+                            it.add(p3)
                         }
                     }
                 }
             }
-            event?.apply {
-                gestureDetector.onTouchEvent(this)
+            index++
+        }
+    }
+
+    private fun getLoopNums(list: List<Any>, foo: (Int, Int) -> Unit) {
+        val onePosition = if (isLeft) {
+            list.size - 1 - if (firstShowPosition == 0) firstShowPosition else firstShowPosition - 1
+        } else {
+            if (firstShowPosition == 0) firstShowPosition else firstShowPosition - 1
+        }
+        val lastPosition = if (isLeft) {
+            list.size - 1 - lastShowPosition - 2
+        } else {
+            if (lastShowPosition + 2 > list.size - 1) list.size - 1 else lastShowPosition + 2
+        }
+        val smallNum: Int
+        val bigNum: Int
+        if (onePosition > lastPosition) {
+            smallNum = lastPosition
+            bigNum = onePosition
+        } else {
+            smallNum = onePosition
+            bigNum = lastPosition
+        }
+        foo.invoke(smallNum, bigNum)
+    }
+
+    private fun getP2(index: Int, p2: PointF, foo: (PointF, Boolean) -> Unit) {
+        val p1Radian: Boolean
+        val p3 =
+            if (index < mPoints.size - 2) {
+                val currentMiddleY = abs((mPoints[index + 1].y - mPoints[index + 2].y) / 2)
+                val previousMiddleY = abs((mPoints[index + 1].y - mPoints[index].y) / 2)
+                if (currentMiddleY > previousMiddleY) {
+                    previousMiddleY
+                } else {
+                    currentMiddleY
+                }.let {
+                    if (mPoints[index].y > mPoints[index + 1].y && mPoints[index + 1].y > mPoints[index + 2].y) {//连续向上
+                        p1Radian = true
+                        PointF(p2.x, mPoints[index + 1].y + it)
+                    } else if (mPoints[index].y < mPoints[index + 1].y && mPoints[index + 1].y < mPoints[index + 2].y) {//连续向下
+                        p1Radian = true
+                        PointF(p2.x, mPoints[index + 1].y - it)
+                    } else {
+                        p1Radian = false
+                        p2
+                    }
+                }
+            } else {
+                p1Radian = false
+                p2
             }
-            true
-        } else super.onTouchEvent(event)
+        foo.invoke(p3, p1Radian)
     }
 
-    /**
-     * onFling方法中调用fling时，此方法会被调用
-     */
-    override fun computeScroll() {
-        if (overScroller.computeScrollOffset()) {
-            if (!isDown) {
-                scrollTo(overScroller.currX, overScroller.currY)
-                postInvalidate()
+    @SuppressLint("MissingPermission")
+    private fun shock(foo: () -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.apply {
+                if (hasVibrator()) {//判断硬件是否有振动器。
+                    cancel()//关闭或者停止振动器。 VibrationEffect.DEFAULT_AMPLITUDE
+                    vibrate(VibrationEffect.createOneShot(46, VibrationEffect.DEFAULT_AMPLITUDE))
+                }
             }
         }
+        foo.invoke()
     }
 
-    override fun scrollTo(x: Int, y: Int) {
-        val oldX = mScroolX
-        mScroolX = x.toFloat()
-        checkMScroolX()
-        if (mScroolX != oldX) {
-            onScrollChanged(mScroolX.toInt(), 0, oldX.toInt(), 0)
-        }
-    }
-
-    override fun onDown(e: MotionEvent?): Boolean {
-        return false
-    }
-
-    override fun onShowPress(e: MotionEvent?) {}
-
-    override fun onSingleTapUp(e: MotionEvent?): Boolean {
-        return false
-    }
-
-    /**
-     * 手指在屏幕上左右滑动时调用
-     */
-    override fun onScroll(
-        e1: MotionEvent?,
-        e2: MotionEvent?,
-        distanceX: Float,
-        distanceY: Float
-    ): Boolean {
-        mScroolX -= distanceX
-        checkMScroolX()
-        postInvalidate()
-        return true
-    }
-
-    /**
-     * 长按回调
-     */
-    override fun onLongPress(e: MotionEvent?) {
-        shock {
-            isLongPress = true
-        }
-    }
-
-    /**
-     * 手指在屏幕上滑动抬起时，需要惯性滚动，此方法被调用
-     * @param velocityX 横着滚动的速度
-     */
-    override fun onFling(
-        e1: MotionEvent?,
-        e2: MotionEvent?,
-        velocityX: Float,
-        velocityY: Float
-    ): Boolean {
-        overScroller.fling(
-            mScroolX.toInt(), 0, (velocityX / 2).roundToInt(), 0, Int.MIN_VALUE, Int.MAX_VALUE,
-            0, 0
-        )
-        return true
-    }
+    private fun getColor(id: Int): Int = context.resources.getColor(id)
 
     private fun log(str: String) {
-        Log.d("MYCHARTVIEW1", str)
+        Log.d("MyChartView", str)
     }
 
-    class MAnimatorListener(val foo: (Boolean) -> Unit) : Animator.AnimatorListener {
+    /**
+     * Int      是数据源的position
+     * Boolean  true是按下的回调，false是抬起的回调
+     */
+    fun setOnItemClickListener(itemClickListener: (Int, Boolean, Float, Float) -> Unit) {
+        this.itemClickListener = itemClickListener
+    }
+
+    fun setDatas(list: ArrayList<MChartData>? = null) {
+        datas.clear()
+        mPoints.clear()
+        if (list.isNullOrEmpty()) {
+            this@MyChartView.maxNum = 100
+            initFoundationSize()
+            postInvalidate()
+        } else {
+            mScroolX = 0f
+            datas.addAll(
+                if (isLeft) list.reversed()
+                else list
+            )
+
+            this@MyChartView.maxNum = list[0].maxNum
+            initFoundationSize {
+                setPoints()
+                if (isBezierCurve)//只有在画曲线的时候需要曲线的数据源，否则使用mPoints即可
+                    setBezierDatas()
+            }
+            itemClickListener?.apply { setFirstShowInfo() }
+            if (isShowAnim) {
+                animWidth =
+                    mWidth - (textPaint.measureText("$maxNum") + margin + textAndLineClearance + linePaint.strokeWidth / 2)
+                if (isAniming) animator?.cancel()
+                animator?.start()
+            } else postInvalidate()
+        }
+    }
+
+    class MAnimatorListener(private val foo: (Boolean) -> Unit) : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator?) {
             foo.invoke(true)
         }
@@ -775,15 +983,3 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         override fun onAnimationRepeat(animation: Animator?) {}
     }
 }
-
-data class MChartData(
-    val maxNum: Int,
-    val point: Int,
-    val bottomStr: String,
-)
-
-data class MChartPointPositionInfo(
-    val position: Int,
-    val positionX: Float,
-    val positionY: Float,
-)

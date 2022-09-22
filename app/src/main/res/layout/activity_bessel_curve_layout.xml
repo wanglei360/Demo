@@ -51,17 +51,20 @@
             android:orientation="vertical">
 
             <com.ntrade.demo.view.chart.MyChartView
-                android:id="@+id/mChart"
+                android:id="@+id/mChart1"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:layout_marginTop="10dp"
+                android:background="@color/bessel_gradual1"
                 app:background_color="@color/bessel_gradual1"
+                app:is_bezier_curve="true"
                 app:is_left="false"
-                app:is_show_bezier_curve_line="false"
-                app:is_show_spot="true"
+                app:is_show_anim="true"
+                app:is_show_bezier_curve_line="true"
                 app:is_show_spot_to_bottom_line="true"
                 app:linear_gradient_color_bottom="#99cc0000"
-                app:linear_gradient_color_top="#FF1966ff" />
+                app:linear_gradient_color_top="#FF1966ff"
+                app:spot_color="@color/color_yellow" />
 
             <TextView
                 android:id="@+id/tv"

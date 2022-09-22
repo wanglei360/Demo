@@ -6,10 +6,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import com.ntrade.demo.bean.MChartData
 import com.ntrade.demo.databinding.ActivityBesselCurveLayoutBinding
 import com.ntrade.demo.pop.WPopup
 import com.ntrade.demo.pop.WPopupModel
-import com.ntrade.demo.view.chart.MChartData
 
 /** * 创建者：leiwu
  * * 时间：2022/8/26 09:46
@@ -24,13 +24,14 @@ class BesselCurveActivity : Activity() {
     private var scrollY = 0
     private var mChartY = 0
     private var wPopup: WPopup? = null
+    private var list = ArrayList<MChartData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.mChart.setOnItemClickListener { position, isDown, pointX, pointY ->
-                if (isDown)
+            binding.mChart1.setOnItemClickListener { position, isSel, pointX, pointY ->
+                if (isSel)
                     showPopupWindow(position, pointX, pointY)
                 else wPopup?.dismiss()
             }
@@ -46,6 +47,7 @@ class BesselCurveActivity : Activity() {
     }
 
     private fun showPopupWindow(position: Int, pointX: Float, pointY: Float) {
+        Log.d("showPopupWindow", "asdf = ${pointY.toInt() - scrollY + mChartY}")
         val poputData = ArrayList<WPopupModel>()
         poputData.add(WPopupModel(list[position].bottomStr))
         WPopup.Builder(this)
@@ -67,35 +69,19 @@ class BesselCurveActivity : Activity() {
     fun btnClick1(v: View) {
     }
 
-    private var list = ArrayList<MChartData>()
     fun btnClick(v: View) {
-        val maxNum = 333
-        ArrayList<MChartData>().apply {
-            for (x in 0..88) {
+        val maxNum = 100
+        var str = ""
+        list = ArrayList<MChartData>().apply {
+            for (x in 0..20000) {
                 val num = getRanNumber1(0, maxNum)
                 add(MChartData(maxNum, num, "  $num  "))
+                if (x < 200) str += "$num,"
             }
-        }.apply {
-            add(2, MChartData(maxNum, 0, "  0  "))
-            add(MChartData(maxNum, 0, "  0  "))
-            binding.mChart.setDatas(this)
-            var str = ""
-            var ssr = ""
-            forEach {
-                str += "${it.point},"
-            }
-            var sss = " $str \n  $ssr"
-            sss += sss
-            sss += sss
-            sss += sss
-            sss += sss
-            sss += sss
-            binding.tv.text = sss
-            list.clear()
-            list.addAll(this)
+            binding.tv.text = "$str$str"
+            binding.mChart1.setDatas(this)
         }
     }
-
 
     /**
      * 获取从 startNum 到 endNum 指定范围的int类型随机整数
@@ -103,11 +89,5 @@ class BesselCurveActivity : Activity() {
      */
     fun getRanNumber1(startNum: Int, endNum: Int): Int {
         return (startNum + (Math.random() * (endNum - startNum))).toInt()
-    }
-
-    fun getRanNumber2(startNum: Int, endNum: Int): Int {
-        var num = (startNum + (Math.random() * (endNum - startNum))).toInt()
-        if (num > endNum * 0.6f) num /= 2
-        return num
     }
 }
