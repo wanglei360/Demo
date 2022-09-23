@@ -34,6 +34,7 @@
         <attr name="spot_radius" format="dimension" /><!-- 圆点的半径 -->
         <attr name="column_width" format="dimension" /><!-- 圆柱的宽度 -->
         <attr name="columu_margin" format="dimension" /><!-- 圆柱使用的边距 -->
+        <attr name="anim_time" format="integer" /><!-- 动画的时间，毫秒 -->
         <attr name="chart_type"><!-- 图标类型 -->
             <enum name="CHART_LINE" value="0" /><!-- 线 -->
             <enum name="CHART_BEZIER_CURVE" value="1" /><!-- 曲线 -->

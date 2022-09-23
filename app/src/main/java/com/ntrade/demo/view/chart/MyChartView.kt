@@ -12,6 +12,7 @@ import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import android.widget.OverScroller
 import androidx.core.view.GestureDetectorCompat
 import com.ntrade.demo.R
@@ -66,9 +67,9 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private var mAnimValue = 0f
     private var maxNum = 100
     private var animWidth = 0f
+    private var animTime = 1000L
     private var longPressX = -1f
     private var longPressY = -1f
-    private var longPressTime = 0L
     private var firstShowPosition = -1
     private var lastShowPosition = -1
     private var bottomStrWidth = -1f
@@ -102,6 +103,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
     private val animator by lazy {
         ValueAnimator.ofFloat(1f, 0f).apply {
+            interpolator = AccelerateInterpolator()
             addUpdateListener { animation ->
                 mAnimValue = animation.animatedValue.toString().toFloat()
                 postInvalidate()
@@ -109,7 +111,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             addListener(MAnimatorListener {
                 isAniming = it
             })
-            duration = 1000
+            duration = animTime
         }
     }
 
@@ -722,6 +724,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             spotRadius = getDimension(R.styleable.chart_spot_radius, 10f)
             columnWidth = getDimension(R.styleable.chart_column_width, 50f)
             columuMargin = getDimension(R.styleable.chart_columu_margin, 16f)
+            animTime = getInt(R.styleable.chart_anim_time, 1000).toLong()
             chartType = getInt(R.styleable.chart_chart_type, 0)
             if (chartType == CHART_COLUMN) {
                 isShowSpot = false
@@ -1014,8 +1017,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
     private fun getLoopNums(list: List<Any>, foo: (Int, Int) -> Unit) {
         val onePosition =
-            if (firstShowPosition == 0)
-                firstShowPosition
+            if (firstShowPosition < 1)
+                0
             else {
                 firstShowPosition - 1
             }.let {
@@ -1024,8 +1027,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 } else it
             }
         val lastPosition =
-            if (lastShowPosition == list.size - 1)
-                lastShowPosition
+            if (lastShowPosition > list.size - 2)
+                list.size - 1
             else {
                 lastShowPosition + 1
             }.let {
