@@ -24,14 +24,20 @@
         <attr name="spot_color" format="color" /><!-- 圆点的颜色 -->
         <attr name="text_color" format="color" /><!-- 文字的颜色 -->
         <attr name="scale_text_size" format="dimension" /><!-- 刻度上的文本字号 -->
-        <attr name="is_show_bezier_curve_line" format="boolean" /><!-- 是否显示曲线 -->
+        <attr name="is_show_line" format="boolean" /><!-- 是否显示线 -->
         <attr name="is_left" format="boolean" /><!-- 是否是左边开始 -->
         <attr name="is_show_gradual_background" format="boolean" /><!-- 是否显示渐变底色 -->
         <attr name="is_compel_can_scroll" format="boolean" /><!-- 是否可以滚动 -->
         <attr name="is_show_anim" format="boolean" /><!-- 是否展示动画 -->
-        <attr name="is_bezier_curve" format="boolean" /><!-- 显示的是否是曲线 -->
-        <attr name="is_show_spot_to_bottom_line" format="boolean" /><!-- 是否点到底的竖线 -->
+        <attr name="is_show_spot_to_bottom_line" format="boolean" /><!-- 点到底的竖线是否显示 -->
+        <attr name="is_show_spot" format="boolean" /><!-- 点是否显示 -->
         <attr name="spot_radius" format="dimension" /><!-- 圆点的半径 -->
+        <attr name="chart_type">
+            <enum name="CHART_LINE" value="0" />
+            <enum name="CHART_BEZIER_CURVE" value="1" />
+            <enum name="CHART_COLUMN" value="2" />
+        </attr>
+
     </declare-styleable>
 
     <declare-styleable name="pancake">

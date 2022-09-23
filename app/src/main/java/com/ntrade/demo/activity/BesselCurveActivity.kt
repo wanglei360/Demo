@@ -73,12 +73,13 @@ class BesselCurveActivity : Activity() {
         val maxNum = 100
         var str = ""
         list = ArrayList<MChartData>().apply {
-            for (x in 0..20000) {
-                val num = getRanNumber1(0, maxNum)
-                add(MChartData(maxNum, num, "  $num  "))
+            for (x in 0..99) {
+//                val num = getRanNumber1(0, maxNum)
+                val num = x
+                add(MChartData(maxNum, num, " $num "))
                 if (x < 200) str += "$num,"
             }
-            binding.tv.text = "$str$str"
+            binding.tv.text = "$str"
             binding.mChart1.setDatas(this)
         }
     }

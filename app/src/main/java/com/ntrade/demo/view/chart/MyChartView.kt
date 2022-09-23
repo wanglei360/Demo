@@ -31,15 +31,22 @@ import kotlin.math.roundToInt
  */
 class MyChartView : View, GestureDetector.OnGestureListener {
 
-    private var isBezierCurve = true// 显示的是否是曲线
-    private var isShowBezierCurveLine = true//曲线是否显示
-    private var isShowSpotToBottomLine = true//曲线到底的竖线是否显示
-    private var isLeft = true // 曲线在屏幕的左边是true ,否则是false
+    private var isShowLine = true//线是否显示
+    private var isShowSpotToBottomLine = true//点到底的竖线是否显示
+    private var isShowSpot = true//点是否显示
+    private var isLeft = true // 图在屏幕的左边是true ,否则是false
     private var isShowGradualBackground = true//是否显示渐变底色
     private var isCompelCanScroll = true//是否可以滚动,可以在布局中设置的参数
     private var isShowAnim = true//是否展示动画
     private var spotRadius = 10f//圆点的半径
     private var mBackgroundColor = 0//底色
+    private var columnWidth = 50f//柱状图柱子的宽度
+    private var columuMargin = 16f//柱状图距离左右两边的距离
+
+    private val CHART_LINE = 0//线
+    private val CHART_BEZIER_CURVE = 1//曲线
+    private val CHART_COLUMN = 2//柱状图
+    private var chartType = CHART_COLUMN
 
     private var startX = 0f//图表的的起始X坐标
     private var startY = 0f//图表的的起始Y坐标
@@ -66,6 +73,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private var lastShowPosition = -1
     private var bottomStrWidth = -1f
     private var bottomStrHeight = -1
+    private var oldSelPosition = -1
     private var isDown = false
     private var isCanScroll = true//是否可以滚动
     private var isAniming = false
@@ -187,6 +195,18 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         }
     }
 
+    private fun MotionEvent.setOnItemClick() {
+        if (isLeft) {
+            val firstPosition = mPoints.size - 1 - firstShowPosition
+
+            val selPosition = (x / aPartWidth + firstPosition).toInt()
+            val selPointX = mPoints[selPosition].x + mScroolX - (aPartWidth * selPosition)
+            val selPointY = mPoints[selPosition].y
+
+
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         return if (isCanScroll && !isAniming) {
@@ -211,21 +231,47 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                             longPressY = y
                             postInvalidate()
                             if (isLongPress) {
-                                try {//防止positionInfos导致的崩溃，基本不会出现问题
-                                    for (y in 0 until positionInfos.size) {
-                                        if (x in positionInfos[y].positionX - spotRadius - 6..positionInfos[y].positionX + spotRadius) {
+                                val selPosition =
+                                    if (isLeft) {
+                                        val firstPointX =
+                                            mPoints[lastShowPosition].x + mScroolX - (aPartWidth * lastShowPosition)
+                                        ((x - firstPointX) / aPartWidth).toInt()
+                                    } else {
+                                        val firstPointX = mPoints[firstShowPosition].x + mScroolX
+                                        ((x - firstPointX) / aPartWidth).toInt() + firstShowPosition
+                                    }
+                                val smallPosition =
+                                    if (selPosition < 1) 0 else selPosition - 1
+
+                                val bigPosition =
+                                    if (selPosition > mPoints.size - 1) mPoints.size - 1 else selPosition + 1
+
+                                val firstXNum: Float
+                                val lastXNum: Float
+                                if (chartType == CHART_COLUMN) {
+                                    firstXNum = mScroolX - columnWidth / 2
+                                    lastXNum = mScroolX + columnWidth / 2
+                                } else {
+                                    firstXNum = mScroolX - linePaint.strokeWidth - spotRadius
+                                    lastXNum = mScroolX + linePaint.strokeWidth + spotRadius
+                                }
+                                for (index in smallPosition..bigPosition) {
+                                    try {
+                                        val pointFirstX = mPoints[index].x + firstXNum
+                                        val pointLastX = mPoints[index].x + lastXNum
+                                        if (x in pointFirstX..pointLastX) {
                                             checkClick(
-                                                positionInfos[y],
-                                                positionInfos[y].positionX,
-                                                positionInfos[y].positionY
+                                                index,
+                                                mPoints[index].x + mScroolX,
+                                                mPoints[index].y
                                             )
-                                            gestureDetector.onTouchEvent(this)
                                             return true
                                         }
+                                    } catch (e: Exception) {
                                     }
-                                    itemClickListener?.invoke(-1, false, -1f, -1f)
-                                } catch (e: Exception) {
                                 }
+                                itemClickListener?.invoke(-1, false, -1f, -1f)
+                                oldSelPosition = -1
                             }
                         }
                     }
@@ -319,28 +365,78 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     }
 
     private fun Canvas.drawChartLine() {
-        if (isBezierCurve)
-            drawBezier()//曲线和渐变底色
-        else drawLine()
+        when (chartType) {
+            CHART_LINE -> drawLine()
+            CHART_BEZIER_CURVE -> drawBezier()//曲线和渐变底色
+            CHART_COLUMN -> drawColumn()
+        }
+    }
+
+    private fun Canvas.drawColumn() {
+        getLoopNums(bezierCurve) { smallNum, bigNum ->
+            val strokeWidth = linePaint.strokeWidth
+            for (x in smallNum..bigNum) {
+                try {
+                    // 渐变的底色
+                    if (isShowGradualBackground) {
+                        gradualBackgroundPath.reset()
+                        gradualBackgroundPath.moveTo(
+                            bezierCurve[x][0].x + strokeWidth,
+                            bezierCurve[x][0].y - strokeWidth
+                        )
+                        gradualBackgroundPath.lineTo(
+                            bezierCurve[x][1].x + strokeWidth,
+                            bezierCurve[x][1].y + strokeWidth
+                        )
+                        gradualBackgroundPath.lineTo(
+                            bezierCurve[x][2].x - strokeWidth,
+                            bezierCurve[x][2].y + strokeWidth
+                        )
+                        gradualBackgroundPath.lineTo(
+                            bezierCurve[x][3].x - strokeWidth,
+                            bezierCurve[x][3].y - strokeWidth
+                        )
+                        drawPath(gradualBackgroundPath, linearGradientPaint)
+                    }
+
+                    if (isShowLine) {
+                        // 柱状图
+                        bezierCurvePath.reset()
+                        bezierCurvePath.moveTo(bezierCurve[x][0].x, bezierCurve[x][0].y)
+                        bezierCurvePath.lineTo(bezierCurve[x][1].x, bezierCurve[x][1].y)
+                        bezierCurvePath.lineTo(bezierCurve[x][2].x, bezierCurve[x][2].y)
+                        bezierCurvePath.lineTo(bezierCurve[x][3].x, bezierCurve[x][3].y)
+                        drawPath(bezierCurvePath, linePaint)
+                    }
+                } catch (e: Exception) {
+                    log("")
+                }
+            }
+        }
     }
 
     private fun Canvas.drawLine() {
         getLoopNums(mPoints) { smallNum, bigNum ->
             for (x in smallNum..bigNum) {
-                drawLine(
-                    mPoints[x].x,
-                    mPoints[x].y,
-                    mPoints[x + 1].x,
-                    mPoints[x + 1].y,
-                    linePaint
-                )
-                gradualBackgroundPath.reset()
-                gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
-                gradualBackgroundPath.lineTo(mPoints[x].x, endY)
-                gradualBackgroundPath.lineTo(mPoints[x + 1].x, endY)
-                gradualBackgroundPath.lineTo(mPoints[x + 1].x, mPoints[x + 1].y)
-                gradualBackgroundPath.close()
-                drawPath(gradualBackgroundPath, linearGradientPaint)
+                if (isShowGradualBackground && x < mPoints.size - 1) {
+                    gradualBackgroundPath.reset()
+                    gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
+                    gradualBackgroundPath.lineTo(mPoints[x].x, endY)
+                    gradualBackgroundPath.lineTo(mPoints[x + 1].x, endY)
+                    gradualBackgroundPath.lineTo(mPoints[x + 1].x, mPoints[x + 1].y)
+                    gradualBackgroundPath.close()
+                    drawPath(gradualBackgroundPath, linearGradientPaint)
+                }
+
+                if (isShowLine && x < mPoints.size - 1) {
+                    drawLine(
+                        mPoints[x].x,
+                        mPoints[x].y,
+                        mPoints[x + 1].x,
+                        mPoints[x + 1].y,
+                        linePaint
+                    )
+                }
             }
         }
     }
@@ -350,11 +446,10 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             for (x in smallNum..bigNum) {
                 bezierCurve[x].also {
                     if (it.isNotEmpty()) {
-                        //贝瑟尔曲线
-                        if (isShowBezierCurveLine) drawBezierCurve(it)
-
                         //贝瑟尔曲线的渐变
                         if (isShowGradualBackground) drawGradualBackground(it)
+                        //贝瑟尔曲线
+                        if (isShowLine) drawBezierCurve(it)
                     }
                 }
             }
@@ -392,8 +487,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     }
 
     private fun Canvas.drawLongPressLine() {
-        drawLine(longPressX - 6, 0f, longPressX + 6, mHeight, linePaint)
-        drawLine(0f, longPressY - 6, mWidth, longPressY + 6, linePaint)
+        drawLine(longPressX, 0f, longPressX, mHeight, linePaint)
+        drawLine(0f, longPressY, mWidth, longPressY, linePaint)
     }
 
     private fun Canvas.mAnim() {
@@ -529,18 +624,19 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                         formPaint
                     )
                 //曲线上的点
-                drawArc(
-                    RectF(//弧线所使用的矩形区域大小
-                        mPoints[x].x - spotRadius,
-                        mPoints[x].y - spotRadius,
-                        mPoints[x].x + spotRadius,
-                        mPoints[x].y + spotRadius
-                    ),
-                    0f,  //开始角度
-                    -360f,  //扫过的角度
-                    true,  //是否使用中心
-                    spotPaint
-                )
+                if (isShowSpot)
+                    drawArc(
+                        RectF(//弧线所使用的矩形区域大小
+                            mPoints[x].x - spotRadius,
+                            mPoints[x].y - spotRadius,
+                            mPoints[x].x + spotRadius,
+                            mPoints[x].y + spotRadius
+                        ),
+                        0f,  //开始角度
+                        -360f,  //扫过的角度
+                        true,  //是否使用中心
+                        spotPaint
+                    )
             }
         }
     }
@@ -554,7 +650,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         var startY: Float
         var stopX: Float
         var stopY: Float
-        for (x in 0..9) {//画横线和横着的数字
+        for (x in 0..9) {//画横线
             startX = 0f
             startY = h * x + this@MyChartView.startY
             stopX = mWidth
@@ -613,16 +709,22 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 Color.parseColor("#F4FBFF")
             )
             textPaint.textSize = getDimension(R.styleable.chart_scale_text_size, 30f)
-            isShowBezierCurveLine =
-                getBoolean(R.styleable.chart_is_show_bezier_curve_line, true)
+            isShowLine =
+                getBoolean(R.styleable.chart_is_show_line, true)
             isShowSpotToBottomLine =
+                getBoolean(R.styleable.chart_is_show_spot_to_bottom_line, true)
+            isShowSpot =
                 getBoolean(R.styleable.chart_is_show_spot_to_bottom_line, true)
             isLeft = getBoolean(R.styleable.chart_is_left, true)
             isShowGradualBackground = getBoolean(R.styleable.chart_is_show_gradual_background, true)
             isCompelCanScroll = getBoolean(R.styleable.chart_is_compel_can_scroll, true)
             isShowAnim = getBoolean(R.styleable.chart_is_show_anim, true)
-            isBezierCurve = getBoolean(R.styleable.chart_is_bezier_curve, true)
             spotRadius = getDimension(R.styleable.chart_spot_radius, 10f)
+            chartType = getInt(R.styleable.chart_chart_type, 0)
+            if (chartType == CHART_COLUMN) {
+                isShowSpot = false
+                isShowSpotToBottomLine = false
+            }
         }
     }
 
@@ -631,31 +733,47 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      */
     private fun initFoundationSize(foo: (() -> Unit)? = null) {
         bottomStrWidth = -1f
-        val size = if (datas.isEmpty()) 1 else datas.size
+        val size =
+            if (datas.isEmpty()) 1
+            else datas.size
+
         hundredWidth = textPaint.measureText("$maxNum")
+
         blankWidth = hundredWidth + textAndLineClearance + margin//空白处的宽度
         blankHeight = (measureHeight(textPaint).toFloat() + margin + spotRadius) * 2
 
-        aPartWidth = mWidth / 7
         aPartWidth =
-            if (hundredWidth > aPartWidth) {
-                hundredWidth
-            } else {
-                aPartWidth
+            if (chartType == CHART_COLUMN) columnWidth + columuMargin * 2 else mWidth / 7
+
+        aPartWidth =
+            when {
+                chartType == CHART_COLUMN -> {
+                    if (aPartWidth > hundredWidth + columuMargin * 2) aPartWidth else hundredWidth + columuMargin * 2
+                }
+                hundredWidth > aPartWidth -> hundredWidth
+                else -> {
+                    aPartWidth
+                }
             }.let {
-                val bottomStr = datas.let { data -> if (data.isEmpty()) "" else data[0].bottomStr }
+                val bottomStr = if (datas.isEmpty()) "" else datas[0].bottomStr
                 val bottomStrWidth = textPaint.measureText(bottomStr)
                 val width = if (it > bottomStrWidth) it else bottomStrWidth
                 if (this@MyChartView.bottomStrWidth < bottomStrWidth)
                     this@MyChartView.bottomStrWidth = bottomStrWidth
                 width + textAndLineClearance
+                width
             }
+
         if (isLeft) {
-            startX = mWidth - (blankWidth + aPartWidth * size) + aPartWidth - spotRadius
+            startX =
+                if (chartType == CHART_COLUMN) mWidth - (aPartWidth * size + blankWidth) + columnWidth / 2
+                else mWidth - (blankWidth + aPartWidth * size) + aPartWidth - spotRadius
             endX = mWidth - blankWidth
         } else {
             startX = blankWidth
-            endX = startX + aPartWidth * size - aPartWidth
+            endX =
+                if (chartType == CHART_COLUMN) startX + aPartWidth * size
+                else startX + aPartWidth * size
         }
         startY = measureHeight(textPaint).toFloat() + spotRadius
         endY = mHeight - blankHeight / 2
@@ -705,30 +823,34 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         ).toInt()
     }
 
-    private fun checkClick(info: MChartPointPositionInfo, pointX: Float, pointY: Float) {
-        val time = System.currentTimeMillis()
-        if (time - longPressTime > 200) {
-            longPressTime = time
-            itemClickListener?.invoke(info.position, true, pointX, pointY)
+    private fun checkClick(index: Int, pointX: Float, pointY: Float) {
+        if (oldSelPosition != index) {
+            oldSelPosition = index
+            itemClickListener?.invoke(
+                if (isLeft) {
+                    mPoints.size - 1 - index
+                } else index, true, pointX, pointY
+            )
         }
-        longPressTime = time
     }
 
     private fun checkMScroolX() {
         if (isLeft) {
             val leftBoundary =
-                chartWidth - mWidth + bottomStrWidth / 2 + margin * 2 + hundredWidth
-            val num = if (-margin < -bottomStrWidth / 2) -margin else -bottomStrWidth / 2
+                chartWidth + blankWidth - aPartWidth - mWidth + bottomStrWidth / 2 + mWidth / 50
+
+            val num = mWidth / 50 * -1
             when {
                 mScroolX > leftBoundary -> mScroolX = leftBoundary
                 mScroolX < num -> mScroolX = num
             }
         } else {
             val bigNum = if (spotRadius > bottomStrWidth / 2) spotRadius else bottomStrWidth / 2
+            val num =
+                (chartWidth - mWidth - margin * 2) * -1 - bigNum - aPartWidth / 2
             when {
                 mScroolX > bigNum -> mScroolX = bigNum
-                mScroolX < mWidth - (chartWidth + bigNum + margin * 2 + hundredWidth) -> mScroolX =
-                    mWidth - (chartWidth + bigNum + margin * 2 + hundredWidth)
+                mScroolX < num -> mScroolX = num
             }
         }
         setFirstShowInfo()
@@ -745,19 +867,29 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             firstShowPosition = ((mScroolX - 10 + aPartWidth) / aPartWidth).toInt()
             val pointPosition = mPoints.size - 1 - firstShowPosition
             var index = 0
-            while (pointPosition > 0) {
+            for (x in pointPosition downTo 0) {
                 val firstX = mPoints[pointPosition].x + mScroolX - (aPartWidth * index)
-                if (firstX > 0) {
-                    positionInfos.add(
-                        MChartPointPositionInfo(
-                            firstShowPosition + index,
-                            firstX + 6,
-                            mPoints[pointPosition - index].y
-                        )
-                    )
-                } else break
+                if (firstX < 0) {
+                    lastShowPosition = firstShowPosition + index - 1
+                    break
+                }
                 index++
             }
+//            log("")
+//            var index = 0
+//            while (pointPosition > 0) {
+//                val firstX = mPoints[pointPosition].x + mScroolX - (aPartWidth * index)
+//                if (firstX > 0) {
+//                    positionInfos.add(
+//                        MChartPointPositionInfo(
+//                            firstShowPosition + index,
+//                            firstX + 6,
+//                            mPoints[pointPosition - index].y
+//                        )
+//                    )
+//                } else  break
+//                index++
+//            }
         } else {
             val firstPointX = blankWidth - aPartWidth + mScroolX + spotRadius
             firstShowPosition =
@@ -767,31 +899,51 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             var pointX: Float
             for (index in firstShowPosition until mPoints.size) {
                 pointX = firstPointX + aPartWidth * index
-                if (pointX < mWidth) {
-                    positionInfos.add(
-                        MChartPointPositionInfo(
-                            index,
-                            pointX + spotRadius,
-                            mPoints[index].y
-                        )
-                    )
-                } else break
+                if (pointX > mWidth) {
+                    lastShowPosition = index - 1
+                    break
+                }
             }
         }
-        lastShowPosition = positionInfos[positionInfos.size - 1].position
     }
 
     private fun setPoints() {
         var index = 0
-        datas.forEach {
-            val x =
-                if (isLeft) aPartWidth * index + startX
-                else aPartWidth * index + blankWidth + textAndLineClearance
+        if (chartType == CHART_COLUMN) {
+            datas.forEach {
+                val x =
+                    if (isLeft) aPartWidth * index + startX + columnWidth / 2
+                    else aPartWidth * index + startX + aPartWidth / 2
 
-            val y =
-                (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
-            mPoints.add(PointF(x, y))
-            index++
+                val y =
+                    (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
+                mPoints.add(PointF(x, y))
+                index++
+            }
+        } else {
+            datas.forEach {
+                val x =
+                    if (isLeft) aPartWidth * index + startX
+                    else aPartWidth * index + startX + spotRadius
+
+                val y =
+                    (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
+                mPoints.add(PointF(x, y))
+                index++
+            }
+        }
+    }
+
+    private fun setColumnDatas() {
+        bezierCurve.clear()
+        mPoints.forEach { point ->
+            ArrayList<PointF>().also {
+                it.add(PointF(point.x - columnWidth / 2, endY))
+                it.add(PointF(point.x - columnWidth / 2, point.y))
+                it.add(PointF(point.x + columnWidth / 2, point.y))
+                it.add(PointF(point.x + columnWidth / 2, endY))
+                bezierCurve.add(it)
+            }
         }
     }
 
@@ -859,16 +1011,27 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     }
 
     private fun getLoopNums(list: List<Any>, foo: (Int, Int) -> Unit) {
-        val onePosition = if (isLeft) {
-            list.size - 1 - if (firstShowPosition == 0) firstShowPosition else firstShowPosition - 1
-        } else {
-            if (firstShowPosition == 0) firstShowPosition else firstShowPosition - 1
-        }
-        val lastPosition = if (isLeft) {
-            list.size - 1 - lastShowPosition - 2
-        } else {
-            if (lastShowPosition + 2 > list.size - 1) list.size - 1 else lastShowPosition + 2
-        }
+        val onePosition =
+            if (firstShowPosition == 0)
+                firstShowPosition
+            else {
+                firstShowPosition - 1
+            }.let {
+                if (isLeft) {
+                    mPoints.size - 1 - it
+                } else it
+            }
+        val lastPosition =
+            if (lastShowPosition == list.size - 1)
+                lastShowPosition
+            else {
+                lastShowPosition + 1
+            }.let {
+                if (isLeft) {
+                    list.size - 1 - it
+                } else it
+            }
+
         val smallNum: Int
         val bigNum: Int
         if (onePosition > lastPosition) {
@@ -954,8 +1117,14 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             this@MyChartView.maxNum = list[0].maxNum
             initFoundationSize {
                 setPoints()
-                if (isBezierCurve)//只有在画曲线的时候需要曲线的数据源，否则使用mPoints即可
-                    setBezierDatas()
+                when (chartType) {//线的使用 mPoints 作为数据即可
+                    CHART_COLUMN -> {
+                        setColumnDatas()
+                    }
+                    CHART_BEZIER_CURVE -> {
+                        setBezierDatas()
+                    }
+                }
             }
             itemClickListener?.apply { setFirstShowInfo() }
             if (isShowAnim) {
