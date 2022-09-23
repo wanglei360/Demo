@@ -381,20 +381,20 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                     if (isShowGradualBackground) {
                         gradualBackgroundPath.reset()
                         gradualBackgroundPath.moveTo(
-                            bezierCurve[x][0].x + strokeWidth,
-                            bezierCurve[x][0].y - strokeWidth
+                            bezierCurve[x][0].x,
+                            bezierCurve[x][0].y
                         )
                         gradualBackgroundPath.lineTo(
-                            bezierCurve[x][1].x + strokeWidth,
-                            bezierCurve[x][1].y + strokeWidth
+                            bezierCurve[x][1].x,
+                            bezierCurve[x][1].y
                         )
                         gradualBackgroundPath.lineTo(
-                            bezierCurve[x][2].x - strokeWidth,
-                            bezierCurve[x][2].y + strokeWidth
+                            bezierCurve[x][2].x,
+                            bezierCurve[x][2].y
                         )
                         gradualBackgroundPath.lineTo(
-                            bezierCurve[x][3].x - strokeWidth,
-                            bezierCurve[x][3].y - strokeWidth
+                            bezierCurve[x][3].x,
+                            bezierCurve[x][3].y
                         )
                         drawPath(gradualBackgroundPath, linearGradientPaint)
                     }
@@ -720,6 +720,8 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             isCompelCanScroll = getBoolean(R.styleable.chart_is_compel_can_scroll, true)
             isShowAnim = getBoolean(R.styleable.chart_is_show_anim, true)
             spotRadius = getDimension(R.styleable.chart_spot_radius, 10f)
+            columnWidth = getDimension(R.styleable.chart_column_width, 50f)
+            columuMargin = getDimension(R.styleable.chart_columu_margin, 16f)
             chartType = getInt(R.styleable.chart_chart_type, 0)
             if (chartType == CHART_COLUMN) {
                 isShowSpot = false
@@ -914,9 +916,9 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 val x =
                     if (isLeft) aPartWidth * index + startX + columnWidth / 2
                     else aPartWidth * index + startX + aPartWidth / 2
-
+                val num = if (it.point == 0) 0.5f else it.point.toFloat()
                 val y =
-                    (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - it.point) + startY
+                    (chartHeight / this@MyChartView.maxNum) * (this@MyChartView.maxNum - num) + startY
                 mPoints.add(PointF(x, y))
                 index++
             }

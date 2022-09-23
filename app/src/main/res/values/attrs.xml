@@ -19,23 +19,25 @@
         <attr name="background_color" format="color" /><!-- 底色 -->
         <attr name="line_color" format="color" /><!-- 曲线的颜色 -->
         <attr name="form_color" format="color" /><!-- 底下表格线的颜色 -->
-        <attr name="linear_gradient_color_top" format="color" /><!-- 贝瑟尔曲线底色渐变的颜色 -->
-        <attr name="linear_gradient_color_bottom" format="color" /><!-- 贝瑟尔曲线底色渐变的颜色 -->
+        <attr name="linear_gradient_color_top" format="color" /><!-- 曲线底色渐变的颜色 -->
+        <attr name="linear_gradient_color_bottom" format="color" /><!-- 曲线底色渐变的颜色 -->
         <attr name="spot_color" format="color" /><!-- 圆点的颜色 -->
         <attr name="text_color" format="color" /><!-- 文字的颜色 -->
         <attr name="scale_text_size" format="dimension" /><!-- 刻度上的文本字号 -->
-        <attr name="is_show_line" format="boolean" /><!-- 是否显示线 -->
+        <attr name="is_show_line" format="boolean" /><!-- 是否显示曲线线 -->
         <attr name="is_left" format="boolean" /><!-- 是否是左边开始 -->
         <attr name="is_show_gradual_background" format="boolean" /><!-- 是否显示渐变底色 -->
         <attr name="is_compel_can_scroll" format="boolean" /><!-- 是否可以滚动 -->
-        <attr name="is_show_anim" format="boolean" /><!-- 是否展示动画 -->
+        <attr name="is_show_anim" format="boolean" /><!-- 是否动画开始展示 -->
         <attr name="is_show_spot_to_bottom_line" format="boolean" /><!-- 点到底的竖线是否显示 -->
         <attr name="is_show_spot" format="boolean" /><!-- 点是否显示 -->
         <attr name="spot_radius" format="dimension" /><!-- 圆点的半径 -->
-        <attr name="chart_type">
-            <enum name="CHART_LINE" value="0" />
-            <enum name="CHART_BEZIER_CURVE" value="1" />
-            <enum name="CHART_COLUMN" value="2" />
+        <attr name="column_width" format="dimension" /><!-- 圆柱的宽度 -->
+        <attr name="columu_margin" format="dimension" /><!-- 圆柱使用的边距 -->
+        <attr name="chart_type"><!-- 图标类型 -->
+            <enum name="CHART_LINE" value="0" /><!-- 线 -->
+            <enum name="CHART_BEZIER_CURVE" value="1" /><!-- 曲线 -->
+            <enum name="CHART_COLUMN" value="2" /><!-- 圆柱 -->
         </attr>
 
     </declare-styleable>
