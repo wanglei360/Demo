@@ -186,9 +186,12 @@ class MyChartView : View, GestureDetector.OnGestureListener {
             drawForm()// 底格的横线
             save()
             translate(mScroolX, 0f)// 平移
-            drawChartLine()//曲线和渐变的背景
-            drawSpotAndLine()//曲线上的点 和 曲线到底的竖线
-            drawBottomNumber()// 画底部的数字
+
+            getLoopNums(mPoints) { smallNum, bigNum ->
+                drawChartLine(smallNum, bigNum)//曲线和渐变的背景
+                drawSpotAndLine(smallNum, bigNum)//曲线上的点 和 曲线到底的竖线
+                drawBottomNumber(smallNum, bigNum)// 画底部的数字
+            }
             restore()
             drawScale()// 画刻度上的字和刻度的竖线和横线
             //画一个蒙版越来越小来当做动画,用其他方法计算找能用的方法实在是太费劲了，还不如这个方法简单
@@ -366,93 +369,86 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         drawScale()// 画刻度上的字和刻度的竖线和横线
     }
 
-    private fun Canvas.drawChartLine() {
+    private fun Canvas.drawChartLine(smallNum: Int, bigNum: Int) {
         when (chartType) {
-            CHART_LINE -> drawLine()
-            CHART_BEZIER_CURVE -> drawBezier()//曲线和渐变底色
-            CHART_COLUMN -> drawColumn()
+            CHART_LINE -> drawLine(smallNum, bigNum)
+            CHART_BEZIER_CURVE -> drawBezier(smallNum, bigNum)//曲线和渐变底色
+            CHART_COLUMN -> drawColumn(smallNum, bigNum)
         }
     }
 
-    private fun Canvas.drawColumn() {
-        getLoopNums(bezierCurve) { smallNum, bigNum ->
-            val strokeWidth = linePaint.strokeWidth
-            for (x in smallNum..bigNum) {
-                try {
-                    // 渐变的底色
-                    if (isShowGradualBackground) {
-                        gradualBackgroundPath.reset()
-                        gradualBackgroundPath.moveTo(
-                            bezierCurve[x][0].x,
-                            bezierCurve[x][0].y
-                        )
-                        gradualBackgroundPath.lineTo(
-                            bezierCurve[x][1].x,
-                            bezierCurve[x][1].y
-                        )
-                        gradualBackgroundPath.lineTo(
-                            bezierCurve[x][2].x,
-                            bezierCurve[x][2].y
-                        )
-                        gradualBackgroundPath.lineTo(
-                            bezierCurve[x][3].x,
-                            bezierCurve[x][3].y
-                        )
-                        drawPath(gradualBackgroundPath, linearGradientPaint)
-                    }
-
-                    if (isShowLine) {
-                        // 柱状图
-                        bezierCurvePath.reset()
-                        bezierCurvePath.moveTo(bezierCurve[x][0].x, bezierCurve[x][0].y)
-                        bezierCurvePath.lineTo(bezierCurve[x][1].x, bezierCurve[x][1].y)
-                        bezierCurvePath.lineTo(bezierCurve[x][2].x, bezierCurve[x][2].y)
-                        bezierCurvePath.lineTo(bezierCurve[x][3].x, bezierCurve[x][3].y)
-                        drawPath(bezierCurvePath, linePaint)
-                    }
-                } catch (e: Exception) {
-                    log("")
-                }
-            }
-        }
-    }
-
-    private fun Canvas.drawLine() {
-        getLoopNums(mPoints) { smallNum, bigNum ->
-            for (x in smallNum..bigNum) {
-                if (isShowGradualBackground && x < mPoints.size - 1) {
+    private fun Canvas.drawColumn(smallNum: Int, bigNum: Int) {
+        for (x in smallNum..bigNum) {
+            try {
+                // 渐变的底色
+                if (isShowGradualBackground) {
                     gradualBackgroundPath.reset()
-                    gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
-                    gradualBackgroundPath.lineTo(mPoints[x].x, endY)
-                    gradualBackgroundPath.lineTo(mPoints[x + 1].x, endY)
-                    gradualBackgroundPath.lineTo(mPoints[x + 1].x, mPoints[x + 1].y)
-                    gradualBackgroundPath.close()
+                    gradualBackgroundPath.moveTo(
+                        bezierCurve[x][0].x,
+                        bezierCurve[x][0].y
+                    )
+                    gradualBackgroundPath.lineTo(
+                        bezierCurve[x][1].x,
+                        bezierCurve[x][1].y
+                    )
+                    gradualBackgroundPath.lineTo(
+                        bezierCurve[x][2].x,
+                        bezierCurve[x][2].y
+                    )
+                    gradualBackgroundPath.lineTo(
+                        bezierCurve[x][3].x,
+                        bezierCurve[x][3].y
+                    )
                     drawPath(gradualBackgroundPath, linearGradientPaint)
                 }
 
-                if (isShowLine && x < mPoints.size - 1) {
-                    drawLine(
-                        mPoints[x].x,
-                        mPoints[x].y,
-                        mPoints[x + 1].x,
-                        mPoints[x + 1].y,
-                        linePaint
-                    )
+                if (isShowLine) {
+                    // 柱状图
+                    bezierCurvePath.reset()
+                    bezierCurvePath.moveTo(bezierCurve[x][0].x, bezierCurve[x][0].y)
+                    bezierCurvePath.lineTo(bezierCurve[x][1].x, bezierCurve[x][1].y)
+                    bezierCurvePath.lineTo(bezierCurve[x][2].x, bezierCurve[x][2].y)
+                    bezierCurvePath.lineTo(bezierCurve[x][3].x, bezierCurve[x][3].y)
+                    drawPath(bezierCurvePath, linePaint)
                 }
+            } catch (e: Exception) {
+                log("")
             }
         }
     }
 
-    private fun Canvas.drawBezier() {
-        getLoopNums(bezierCurve) { smallNum, bigNum ->
-            for (x in smallNum..bigNum) {
-                bezierCurve[x].also {
-                    if (it.isNotEmpty()) {
-                        //贝瑟尔曲线的渐变
-                        if (isShowGradualBackground) drawGradualBackground(it)
-                        //贝瑟尔曲线
-                        if (isShowLine) drawBezierCurve(it)
-                    }
+    private fun Canvas.drawLine(smallNum: Int, bigNum: Int) {
+        for (x in smallNum..bigNum) {
+            if (isShowGradualBackground && x < mPoints.size - 1) {
+                gradualBackgroundPath.reset()
+                gradualBackgroundPath.moveTo(mPoints[x].x, mPoints[x].y)
+                gradualBackgroundPath.lineTo(mPoints[x].x, endY)
+                gradualBackgroundPath.lineTo(mPoints[x + 1].x, endY)
+                gradualBackgroundPath.lineTo(mPoints[x + 1].x, mPoints[x + 1].y)
+                gradualBackgroundPath.close()
+                drawPath(gradualBackgroundPath, linearGradientPaint)
+            }
+
+            if (isShowLine && x < mPoints.size - 1) {
+                drawLine(
+                    mPoints[x].x,
+                    mPoints[x].y,
+                    mPoints[x + 1].x,
+                    mPoints[x + 1].y,
+                    linePaint
+                )
+            }
+        }
+    }
+
+    private fun Canvas.drawBezier(smallNum: Int, bigNum: Int) {
+        for (x in smallNum..bigNum) {
+            bezierCurve[x].also {
+                if (it.isNotEmpty()) {
+                    //贝瑟尔曲线的渐变
+                    if (isShowGradualBackground) drawGradualBackground(it)
+                    //贝瑟尔曲线
+                    if (isShowLine) drawBezierCurve(it)
                 }
             }
         }
@@ -579,7 +575,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     /**
      * 画底部的数字
      */
-    private fun Canvas.drawBottomNumber() {
+    private fun Canvas.drawBottomNumber(smallNum: Int, bigNum: Int) {
         mPath.reset()
         if (isLeft) {
             mPath.moveTo(startX - spotRadius, endY)
@@ -599,48 +595,48 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         var strX: Float
         var strY: Float
         var str: String
-        getLoopNums(mPoints) { smallNum, bigNum ->
-            for (x in smallNum..bigNum) {//画底部的数字
-                str = datas[x].bottomStr
-                val textWidth = textPaint.measureText(str)
-                strX = mPoints[x].x - textWidth / 2
-                strY = endY + bottomStrHeight * 2 + spotRadius
-                drawText(str, strX, strY, textPaint)
-            }
+//        getLoopNums(mPoints) { smallNum, bigNum ->
+        for (x in smallNum..bigNum) {//画底部的数字
+            str = datas[x].bottomStr
+            val textWidth = textPaint.measureText(str)
+            strX = mPoints[x].x - textWidth / 2
+            strY = endY + bottomStrHeight * 2 + spotRadius
+            drawText(str, strX, strY, textPaint)
         }
+//        }
     }
 
     /**
      * 画贝瑟尔曲线的点和点到底部的竖线
      */
-    private fun Canvas.drawSpotAndLine() {
-        getLoopNums(mPoints) { smallNum, bigNum ->
-            for (x in smallNum..bigNum) {
-                //曲线到底的竖线
-                if (isShowSpotToBottomLine)
-                    drawLine(
-                        mPoints[x].x,
-                        mPoints[x].y,
-                        mPoints[x].x,
-                        endY,
-                        formPaint
-                    )
-                //曲线上的点
-                if (isShowSpot)
-                    drawArc(
-                        RectF(//弧线所使用的矩形区域大小
-                            mPoints[x].x - spotRadius,
-                            mPoints[x].y - spotRadius,
-                            mPoints[x].x + spotRadius,
-                            mPoints[x].y + spotRadius
-                        ),
-                        0f,  //开始角度
-                        -360f,  //扫过的角度
-                        true,  //是否使用中心
-                        spotPaint
-                    )
-            }
+    private fun Canvas.drawSpotAndLine(smallNum: Int, bigNum: Int) {
+//        getLoopNums(mPoints) { smallNum, bigNum ->
+        for (x in smallNum..bigNum) {
+            //曲线到底的竖线
+            if (isShowSpotToBottomLine)
+                drawLine(
+                    mPoints[x].x,
+                    mPoints[x].y,
+                    mPoints[x].x,
+                    endY,
+                    formPaint
+                )
+            //曲线上的点
+            if (isShowSpot)
+                drawArc(
+                    RectF(//弧线所使用的矩形区域大小
+                        mPoints[x].x - spotRadius,
+                        mPoints[x].y - spotRadius,
+                        mPoints[x].x + spotRadius,
+                        mPoints[x].y + spotRadius
+                    ),
+                    0f,  //开始角度
+                    -360f,  //扫过的角度
+                    true,  //是否使用中心
+                    spotPaint
+                )
         }
+//        }
     }
 
     /**
@@ -1017,20 +1013,20 @@ class MyChartView : View, GestureDetector.OnGestureListener {
 
     private fun getLoopNums(list: List<Any>, foo: (Int, Int) -> Unit) {
         val onePosition =
-            if (firstShowPosition < 1)
+            if (firstShowPosition < 2)
                 0
             else {
-                firstShowPosition - 1
+                firstShowPosition - 2
             }.let {
                 if (isLeft) {
                     mPoints.size - 1 - it
                 } else it
             }
         val lastPosition =
-            if (lastShowPosition > list.size - 2)
+            if (lastShowPosition > list.size - 3)
                 list.size - 1
             else {
-                lastShowPosition + 1
+                lastShowPosition + 2
             }.let {
                 if (isLeft) {
                     list.size - 1 - it
