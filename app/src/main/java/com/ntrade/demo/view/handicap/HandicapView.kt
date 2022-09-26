@@ -34,6 +34,7 @@ class HandicapView : View {
     private var total = 5
     private var defaultNum = 0.2f
     private var itemColor = -1
+    private var defaultStr = "--"
 
     private var mWidth = -1f
     private var mHeight = -1f
@@ -229,8 +230,12 @@ class HandicapView : View {
                 formPaint.strokeWidth = getDimension(R.styleable.handicap_split_line_height, 2f)
 
                 isLeft = getBoolean(R.styleable.handicap_is_left_handicap, true)
+
                 total = getInteger(R.styleable.handicap_item_total, 5)
                 defaultNum = getInteger(R.styleable.handicap_item_default_num, 10) / 100f
+                defaultStr = getString(R.styleable.handicap_default_str).let {
+                    if (it.isNullOrEmpty()) "--" else it
+                }
                 itemColor = getColor(
                     R.styleable.handicap_item_color, 855681164
                 )
@@ -252,7 +257,7 @@ class HandicapView : View {
     private fun initData() {
         if (defaultData.isEmpty()) {
             for (x in 0 until total) {
-                defaultData.add(HandicapData(defaultNum, "--", "--"))
+                defaultData.add(HandicapData(defaultNum, defaultStr, defaultStr))
             }
         }
         for (x in 0 until total) {

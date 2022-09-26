@@ -78,4 +78,10 @@ dependencies {
     //权限申请:https://github.com/yanzhenjie/AndPermission
     //permission_dialog_wait，没有这个会出现一个很难看的正在请求授权的浮层
     implementation "com.yanzhenjie:permission:2.0.3"
+
+
+    //内存泄漏检查：github：https://github.com/square/leakcanary  博客：https://www.jianshu.com/p/a5e69a2e093f
+    //logTag:LeakCanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.3'
+
 }

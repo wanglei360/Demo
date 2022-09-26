@@ -37,9 +37,9 @@ class HandicapActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         b = false
+        handler.removeCallbacksAndMessages(null)
         binding.handicap1.viewDestroy()
         binding.handicap2.viewDestroy()
-        handler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -59,7 +59,7 @@ class HandicapActivity : AppCompatActivity() {
     }
 
     private fun setData() {
-        handler.sendMessageDelayed(Message.obtain(), 100L)
+        handler.sendMessageDelayed(Message.obtain(), 200L)
         list1.clear()
         list2.clear()
         for (x in 0..19) {

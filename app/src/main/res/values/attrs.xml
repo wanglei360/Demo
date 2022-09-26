@@ -70,5 +70,7 @@
         <attr name="text_right_color" format="color" /><!-- 右边文本的颜色 -->
         <attr name="split_line_color" format="color" /><!-- 分割线的颜色 -->
 
+        <attr name="default_str" format="string" /><!-- 默认的文本 -->
+
     </declare-styleable>
 </resources>

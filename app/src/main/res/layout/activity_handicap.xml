@@ -42,34 +42,35 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingBottom="50dp">
 
         <com.ntrade.demo.view.handicap.HandicapView
             android:id="@+id/handicap1"
             android:layout_width="0dp"
-            android:layout_height="460dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@color/white"
             app:is_left_handicap="false"
             app:item_default_num="10"
             app:item_total="20"
             app:split_line_color="@color/white"
-            app:split_line_height="2dp"
+            app:split_line_height="4dp"
             app:text_left_size="12sp"
             app:text_margin_left="20dp"
             app:text_margin_right="20dp"
             app:text_right_size="12sp" />
 
         <View
-            android:layout_width="2dp"
+            android:layout_width="4dp"
             android:layout_height="match_parent"
             android:background="@color/white" />
 
         <com.ntrade.demo.view.handicap.HandicapView
             android:id="@+id/handicap2"
             android:layout_width="0dp"
-            android:layout_height="460dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@color/white"
             app:is_left_handicap="true"
@@ -77,7 +78,7 @@
             app:item_default_num="10"
             app:item_total="20"
             app:split_line_color="@color/white"
-            app:split_line_height="2dp"
+            app:split_line_height="4dp"
             app:text_left_color="@color/text_cc0000"
             app:text_left_size="12sp"
             app:text_margin_left="20dp"
