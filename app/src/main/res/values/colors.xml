@@ -63,4 +63,6 @@
     <color name="bessel_gradual2">#8015AE9E</color>
 
 
+    <color name="depth_buy_line_color">#3300A88C</color>
+    <color name="depth_sell_fill_color">#22D9415A</color>
 </resources>

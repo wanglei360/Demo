@@ -52,7 +52,7 @@
         <activity android:name="com.ntrade.map.MapActivity" />
         <activity android:name="com.ntrade.map.BaiduActivity" />
         <activity android:name="com.ntrade.map.SystemServiceLocationActivity" />
-        <activity android:name="com.ntrade.map.SystemServiceLocationTextShowActivity" />
+        <activity android:name=".activity.HandicapActivity" />
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"

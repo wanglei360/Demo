@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
             add("贝瑟尔曲线的图")// 5
             add("饼图")// 6
             add("地图")// 7
+            add("盘口")// 8
             binding.lv.adapter = MListAdapter(this) { position ->
                 when (position) {
                     0 -> goToActivity(ViewBindingActivity::class.java)
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
                     5 -> goToActivity(BesselCurveActivity::class.java)
                     6 -> goToActivity(PancakeActivity::class.java)
                     7 -> goToActivity(MapActivity::class.java)
+                    8 -> goToActivity(HandicapActivity::class.java)
                 }
             }
         }

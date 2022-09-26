@@ -53,4 +53,22 @@
         <attr name="pancake_animator_duration" format="integer" /><!-- 是否显示中心小圆 -->
 
     </declare-styleable>
+
+    <declare-styleable name="handicap">
+        <attr name="text_margin_left" format="dimension" /><!-- 左边文本距离左边的宽度 -->
+        <attr name="text_margin_right" format="dimension" /><!-- 右边边文本距离右边的宽度 -->
+        <attr name="text_left_size" format="dimension" /><!-- 左边文本的大小 -->
+        <attr name="text_right_size" format="dimension" /><!-- 右边文本的大小 -->
+        <attr name="split_line_height" format="dimension" /><!-- 分割线的高度 -->
+
+        <attr name="is_left_handicap" format="boolean" /><!-- true：0在左边，否则0在右边 -->
+        <attr name="item_total" format="integer" /><!-- 一共有几个条目，默认是五个 -->
+        <attr name="item_default_num" format="integer" /><!-- 没有数据时，默认显示的数据，int类型，1-100 -->
+
+        <attr name="item_color" format="color" /><!-- 条目的颜色 -->
+        <attr name="text_left_color" format="color" /><!-- 左边文本的颜色 -->
+        <attr name="text_right_color" format="color" /><!-- 右边文本的颜色 -->
+        <attr name="split_line_color" format="color" /><!-- 分割线的颜色 -->
+
+    </declare-styleable>
 </resources>
