@@ -48,9 +48,10 @@
         <attr name="pancake_text_color" format="color" /><!-- 字的颜色 -->
         <attr name="pancake_line_color" format="color" /><!-- 圆和字链接线的颜色 -->
         <attr name="pancake_is_show_split_line" format="boolean" /><!-- 是否显示分割线 -->
+        <attr name="pancake_is_show_line" format="boolean" /><!-- 是否显示字和圆的连接线线 -->
         <attr name="pancake_is_start_anim" format="boolean" /><!-- 是否是以动画的形式开始展示 -->
         <attr name="pancake_is_show_small_circular" format="boolean" /><!-- 是否显示中心小圆 -->
-        <attr name="pancake_animator_duration" format="integer" /><!-- 是否显示中心小圆 -->
+        <attr name="pancake_animator_duration" format="integer" /><!-- 动画市场时长 -->
 
     </declare-styleable>
 

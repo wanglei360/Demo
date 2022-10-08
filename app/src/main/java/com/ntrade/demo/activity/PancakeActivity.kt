@@ -3,6 +3,7 @@ package com.ntrade.demo.activity
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import android.widget.CheckBox
 import android.widget.Toast
 import com.ntrade.demo.databinding.ActivityPancakeLayoutBinding
 
@@ -28,6 +29,33 @@ class PancakeActivity : Activity() {
                 }
             }
         }
+        binding.animTrue.setOnClickListener {
+            setIsStartAnim(it as CheckBox)
+        }
+        binding.animFalse.setOnClickListener {
+            setIsStartAnim(it as CheckBox)
+        }
+
+        binding.showTextLine.setOnClickListener {
+            setTextLine(it as CheckBox)
+        }
+        binding.goneTextLine.setOnClickListener {
+            setTextLine(it as CheckBox)
+        }
+    }
+
+    private fun setTextLine(cb: CheckBox) {
+        binding.showTextLine.isChecked = false
+        binding.goneTextLine.isChecked = false
+        binding.mPancakeView.pancakeIsShowLine = cb == binding.showTextLine
+        cb.isChecked = true
+    }
+
+    private fun setIsStartAnim(animView: CheckBox) {
+        binding.animTrue.isChecked = false
+        binding.animFalse.isChecked = false
+        binding.mPancakeView.isStartAnim = animView == binding.animTrue
+        animView.isChecked = true
     }
 
     fun btnClick1(v: View) {

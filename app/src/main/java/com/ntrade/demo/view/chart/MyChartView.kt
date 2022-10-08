@@ -44,10 +44,10 @@ class MyChartView : View, GestureDetector.OnGestureListener {
     private var columnWidth = 50f//柱状图柱子的宽度
     private var columuMargin = 16f//柱状图距离左右两边的距离
 
-    private val CHART_LINE = 0//线
-    private val CHART_BEZIER_CURVE = 1//曲线
-    private val CHART_COLUMN = 2//柱状图
-    private var chartType = CHART_COLUMN
+    val CHART_LINE = 0//线
+    val CHART_BEZIER_CURVE = 1//曲线
+    val CHART_COLUMN = 2//柱状图
+    var chartType = CHART_COLUMN
 
     private var startX = 0f//图表的的起始X坐标
     private var startY = 0f//图表的的起始Y坐标

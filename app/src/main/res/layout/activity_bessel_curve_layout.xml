@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#fff"
@@ -21,7 +22,8 @@
             android:onClick="btnClick"
             android:text="数据"
             android:textColor="#fff"
-            android:textSize="22sp" />
+            android:textSize="22sp"
+            tools:ignore="TextContrastCheck" />
 
         <View
             android:layout_width="3dp"
@@ -36,7 +38,7 @@
             android:gravity="center"
             android:onClick="btnClick1"
             android:text="ssssss"
-            android:textColor="#fff"
+            android:textColor="#546E7A"
             android:textSize="22sp" />
     </LinearLayout>
 
@@ -50,20 +52,59 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
+
+                <CheckBox
+                    android:id="@+id/chart_line"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="线"
+                    android:textColor="#000"
+                    android:textSize="16sp" />
+
+                <CheckBox
+                    android:id="@+id/chart_bezier_curve"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="曲线"
+                    android:textColor="#000"
+                    android:textSize="16sp" />
+
+                <CheckBox
+                    android:id="@+id/chart_column"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="false"
+                    android:text="柱状图"
+                    android:textColor="#000"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+
             <com.ntrade.demo.view.chart.MyChartView
                 android:id="@+id/mChart1"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
-                android:layout_marginTop="10dp"
                 android:background="@color/bessel_gradual1"
                 app:background_color="@color/bessel_gradual1"
                 app:chart_type="CHART_BEZIER_CURVE"
+                app:column_width="30dp"
+                app:columu_margin="6dp"
                 app:is_left="false"
                 app:is_show_anim="true"
                 app:is_show_gradual_background="true"
                 app:is_show_line="true"
-                app:column_width="30dp"
-                app:columu_margin="6dp"
                 app:is_show_spot_to_bottom_line="true"
                 app:linear_gradient_color_bottom="#99cc0000"
                 app:linear_gradient_color_top="#FF1966ff"

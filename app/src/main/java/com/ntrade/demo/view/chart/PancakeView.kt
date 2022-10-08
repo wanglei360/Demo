@@ -27,8 +27,9 @@ import kotlin.math.sin
 class PancakeView : View {
 
     private var isShowSplitLine = true
+     var pancakeIsShowLine = true//是否显示字和圆的连接线线
     private var isShowSmallCircular = true
-    private var isStartAnim = true
+    var isStartAnim = true
     private var mBackgroundColor = Color.parseColor("#ffffff")
     private var mTextColor = Color.parseColor("#000000")
     private var mLineColor = Color.parseColor("#000000")
@@ -126,6 +127,7 @@ class PancakeView : View {
             linePaint.color = mLineColor
 
             isShowSplitLine = getBoolean(R.styleable.pancake_pancake_is_show_split_line, true)
+            pancakeIsShowLine = getBoolean(R.styleable.pancake_pancake_is_show_line, true)
             isStartAnim = getBoolean(R.styleable.pancake_pancake_is_start_anim, true)
             isShowSmallCircular =
                 getBoolean(R.styleable.pancake_pancake_is_show_small_circular, true)
@@ -207,6 +209,7 @@ class PancakeView : View {
 
         if (mAnimValue == 1f) {
             mDatas.forEach {
+                it.setTextLine(this)
                 drawText(it.text, it.textX, it.textY, textPaint)
             }
         }
@@ -221,22 +224,7 @@ class PancakeView : View {
                 true,  //是否使用中心
                 it.mPaint!!
             )
-
-            drawLine(//从圆里面画出来的斜线
-                it.slantLineStartX,
-                it.slantLineStartY,
-                it.slantLineEndX,
-                it.slantLineEndY,
-                linePaint
-            )
-
-            drawLine(//跟显示的文本挨着的横线
-                it.textLineStartX,
-                it.textLineStartY,
-                it.textLineEndX,
-                it.textLineEndY,
-                linePaint
-            )
+            it.setTextLine(this)
 
             drawText(it.text, it.textX, it.textY - 6, textPaint)
         }
@@ -259,6 +247,26 @@ class PancakeView : View {
                     drawLine(centerX, centerY, this[0], this[1], splitLinePaint)
                 }
             }
+        }
+    }
+
+    private fun PancakeData.setTextLine(canvas: Canvas) {
+        if (pancakeIsShowLine) {
+            canvas.drawLine(//从圆里面画出来的斜线
+                slantLineStartX,
+                slantLineStartY,
+                slantLineEndX,
+                slantLineEndY,
+                linePaint
+            )
+
+            canvas.drawLine(//跟显示的文本挨着的横线
+                textLineStartX,
+                textLineStartY,
+                textLineEndX,
+                textLineEndY,
+                linePaint
+            )
         }
     }
 
@@ -397,16 +405,7 @@ class PancakeView : View {
         forEach {
             val newDegree = 360f / 100f * it.num
             val degreeTotal = degree + newDegree
-
-            if (isStartAnim) {//有动画的
-                calculatePosition(
-                    degreeTotal + 90 - newDegree / 2,
-                    radius * 0.76f
-                ).also { coordinate ->
-                    textX = coordinate[0] - textPaint.measureText(it.text) / 2
-                    textY = coordinate[1] + measureHeight(textPaint) / 2
-                }
-            } else {//没动画的
+            if (pancakeIsShowLine) {
                 startCoordinate0 =
                     calculatePosition(degreeTotal + 90 - newDegree / 2, radius - peripheralWidth)
                 endCoordinate1 =
@@ -427,18 +426,26 @@ class PancakeView : View {
                     endCoordinate1!![0] - textWidth * 2
                 }
                 textY = endCoordinate1!![1] + textHeight / 2
+            } else {
+                calculatePosition(
+                    degreeTotal + 90 - newDegree / 2,
+                    radius * 0.76f
+                ).also { coordinate ->
+                    textX = coordinate[0] - textPaint.measureText(it.text) / 2
+                    textY = coordinate[1] + measureHeight(textPaint) / 2
+                }
             }
 
             it.startDegree = degree// 360度中开始的度
             it.endDegree = newDegree// 360度中结束的度
-            it.slantLineStartX = if (!isStartAnim) startCoordinate0!![0] else -1f// 斜线线段的起始x坐标
-            it.slantLineStartY = if (!isStartAnim) startCoordinate0!![1] else -1f// 斜线线段的起始y坐标
-            it.slantLineEndX = if (!isStartAnim) endCoordinate1!![0] else -1f// 斜线线段的结束x坐标
-            it.slantLineEndY = if (!isStartAnim) endCoordinate1!![1] else -1f// 斜线线段的结束y坐标
-            it.textLineStartX = if (!isStartAnim) endCoordinate1!![0] else -1f
-            it.textLineStartY = if (!isStartAnim) endCoordinate1!![1] else -1f
-            it.textLineEndX = if (!isStartAnim) textLineEndX!! else -1f
-            it.textLineEndY = if (!isStartAnim) endCoordinate1!![1] else -1f
+            it.slantLineStartX = if (pancakeIsShowLine) startCoordinate0!![0] else -1f// 斜线线段的起始x坐标
+            it.slantLineStartY = if (pancakeIsShowLine) startCoordinate0!![1] else -1f// 斜线线段的起始y坐标
+            it.slantLineEndX = if (pancakeIsShowLine) endCoordinate1!![0] else -1f// 斜线线段的结束x坐标
+            it.slantLineEndY = if (pancakeIsShowLine) endCoordinate1!![1] else -1f// 斜线线段的结束y坐标
+            it.textLineStartX = if (pancakeIsShowLine) endCoordinate1!![0] else -1f
+            it.textLineStartY = if (pancakeIsShowLine) endCoordinate1!![1] else -1f
+            it.textLineEndX = if (pancakeIsShowLine) textLineEndX!! else -1f
+            it.textLineEndY = if (pancakeIsShowLine) endCoordinate1!![1] else -1f
             it.textX = textX// 文本的起始x坐标
             it.textY = textY// 文本的起始Y坐标
             it.mPaint = getPaint(randomColor(), 1, Paint.Style.FILL_AND_STROKE)

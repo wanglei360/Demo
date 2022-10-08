@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.widget.CheckBox
 import com.ntrade.demo.bean.MChartData
 import com.ntrade.demo.databinding.ActivityBesselCurveLayoutBinding
 import com.ntrade.demo.pop.WPopup
@@ -31,14 +32,14 @@ class BesselCurveActivity : Activity() {
         setContentView(binding.root)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             binding.mChart1.setOnItemClickListener { position, isSel, pointX, pointY ->
-                if (isSel)
-                    showPopupWindow(position, pointX, pointY)
+                if (isSel) showPopupWindow(position, pointX, pointY)
                 else wPopup?.dismiss()
             }
             binding.mSv.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
                 this@BesselCurveActivity.scrollY = scrollY
             }
         }
+        setCheckedChangeListener()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -46,12 +47,42 @@ class BesselCurveActivity : Activity() {
         mChartY = binding.topView.height
     }
 
+    private fun setCheckedChangeListener() {
+        binding.chartLine.setOnClickListener {
+            setChartType(binding.chartLine)
+        }
+        binding.chartBezierCurve.setOnClickListener {
+            setChartType(binding.chartBezierCurve)
+        }
+        binding.chartColumn.setOnClickListener {
+            setChartType(binding.chartColumn)
+        }
+    }
+
+    private fun setChartType(buttonView: CheckBox) {
+        binding.chartLine.isChecked = false
+        binding.chartBezierCurve.isChecked = false
+        binding.chartColumn.isChecked = false
+        binding.mChart1.chartType =
+            when (buttonView) {
+                binding.chartLine -> {
+                    binding.mChart1.CHART_LINE
+                }
+                binding.chartBezierCurve -> {
+                    binding.mChart1.CHART_BEZIER_CURVE
+                }
+                else -> {
+                    binding.mChart1.CHART_COLUMN
+                }
+            }
+        buttonView.isChecked = true
+    }
+
     private fun showPopupWindow(position: Int, pointX: Float, pointY: Float) {
         Log.d("showPopupWindow", "asdf = ${pointY.toInt() - scrollY + mChartY}")
         val poputData = ArrayList<WPopupModel>()
         poputData.add(WPopupModel(list[position].bottomStr))
-        WPopup.Builder(this)
-            .setData(poputData)    // 设置数据，数据类为WPopupModel
+        WPopup.Builder(this).setData(poputData)    // 设置数据，数据类为WPopupModel
             .setCancelable(true) // 设置是否能点击外面dismiss
             .setIsShowTriangle(false)
             .setPopupOrientation(WPopup.Builder.VERTICAL)   // 设置item排列方向 默认为竖向排列
