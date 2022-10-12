@@ -18,6 +18,7 @@ import androidx.core.view.GestureDetectorCompat
 import com.ntrade.demo.R
 import com.ntrade.demo.bean.MChartData
 import com.ntrade.demo.bean.MChartPointPositionInfo
+import com.ntrade.demo.tool.PaintUtils
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -84,6 +85,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
      * position,isSel,pointX,pointY
      */
     private var itemClickListener: ((Int, Boolean, Float, Float) -> Unit)? = null
+    private val paintUtils by lazy { PaintUtils() }
     private val datas by lazy { ArrayList<MChartData>() }
     private val mPoints = ArrayList<PointF>()
 
@@ -591,7 +593,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         mPath.close()
         drawPath(mPath, backgroundPaint)
 
-        bottomStrHeight = measureHeight(textPaint) / 2
+        bottomStrHeight = paintUtils.measureHeight(textPaint) / 2
         var strX: Float
         var strY: Float
         var str: String
@@ -741,7 +743,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         hundredWidth = textPaint.measureText("$maxNum")
 
         blankWidth = hundredWidth + textAndLineClearance + margin//空白处的宽度
-        blankHeight = (measureHeight(textPaint).toFloat() + margin + spotRadius) * 2
+        blankHeight = (paintUtils.measureHeight(textPaint).toFloat() + margin + spotRadius) * 2
 
         aPartWidth =
             if (chartType == CHART_COLUMN) columnWidth + columuMargin * 2 else mWidth / 7
@@ -776,7 +778,7 @@ class MyChartView : View, GestureDetector.OnGestureListener {
                 if (chartType == CHART_COLUMN) startX + aPartWidth * size
                 else startX + aPartWidth * size
         }
-        startY = measureHeight(textPaint).toFloat() + spotRadius
+        startY = paintUtils.measureHeight(textPaint).toFloat() + spotRadius
         endY = mHeight - blankHeight / 2
         chartWidth = endX - startX
         chartHeight = endY - startY
@@ -804,16 +806,6 @@ class MyChartView : View, GestureDetector.OnGestureListener {
         mPaint.style = style
         mPaint.isAntiAlias = true// 设置画笔的锯齿效果
         return mPaint
-    }
-
-    /**
-     * 获取要画的文本的高度
-     * todo 获取宽度可以直接用 TextView 的 Paint 调用measureText("字符串")
-     * todo textView.paint.measureText("字符串");
-     */
-    private fun measureHeight(paint: Paint): Int {
-        val fm = paint.fontMetricsInt
-        return fm.top.inv() - (fm.top.inv() - fm.ascent.inv()) - (fm.bottom - fm.descent)
     }
 
     private fun dp2px(value: Float): Int {

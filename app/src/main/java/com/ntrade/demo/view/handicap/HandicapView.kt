@@ -18,6 +18,7 @@ import android.view.View
 import android.view.animation.AccelerateInterpolator
 import com.ntrade.demo.R
 import com.ntrade.demo.bean.HandicapData
+import com.ntrade.demo.tool.PaintUtils
 
 /** * 创建者：leiwu
  * * 时间：2022/9/26 09:50
@@ -48,6 +49,7 @@ class HandicapView : View {
     private var sonThreadHandler: Handler? = null
     private val HANDLER_DESTROY = 11
     private val SET_DATAS = 12
+    private val paintUtils by lazy { PaintUtils() }
     private val defaultData by lazy { ArrayList<HandicapData>() }
     private val drawMap by lazy { HashMap<Int, ArrayList<Float>>() }
     private val list by lazy { ArrayList<HandicapData>() }
@@ -122,7 +124,7 @@ class HandicapView : View {
         mWidth = w.toFloat()//控件的宽
         mHeight = h.toFloat()//控件的高
         aPartHeight = mHeight / total
-        textHeight = measureHeight(textPaintLeft)
+        textHeight = paintUtils.measureHeight(textPaintLeft)
         if (defaultData.isNotEmpty())
             setDatas(defaultData)
     }
@@ -337,16 +339,6 @@ class HandicapView : View {
         mPaint.style = style
         mPaint.isAntiAlias = true// 设置画笔的锯齿效果
         return mPaint
-    }
-
-    /**
-     * 获取要画的文本的高度
-     * todo 获取宽度可以直接用 TextView 的 Paint 调用measureText("字符串")
-     * todo textView.paint.measureText("字符串");
-     */
-    private fun measureHeight(paint: Paint): Int {
-        val fm = paint.fontMetricsInt
-        return fm.top.inv() - (fm.top.inv() - fm.ascent.inv()) - (fm.bottom - fm.descent)
     }
 
     private fun dp2px(value: Float): Int {

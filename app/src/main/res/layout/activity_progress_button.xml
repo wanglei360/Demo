@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/line"
-    android:gravity="center"
     android:orientation="vertical">
 
     <com.ntrade.demo.view.progress_button.ProgressButton
         android:id="@+id/test_view"
         android:layout_width="200dp"
         android:layout_height="60dp"
-        app:background_default_color="@color/color_blue"
+        android:layout_gravity="center_horizontal"
+        app:background_default_color="@color/color_green1"
         app:background_is_line="yes"
         app:background_selector_color="@color/color_green1"
         app:radius="1dp"
@@ -19,34 +19,42 @@
         app:text_selector_color="@color/color_white"
         app:text_size="43sp" />
 
+    <com.ntrade.demo.view.progress_button.ProgressTest
+        android:id="@+id/test_view_progress"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
+
     <TextView
         android:id="@+id/test_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="#000"
-        android:gravity="center"
-        android:textSize="33sp" />
+        android:text="上面的方块，其中抠出了一个绘制区域绘制，区域以外的不绘制"
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/test_btn"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="开始"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/btn_background_blue" />
+        android:layout_marginTop="20dp"
+        android:background="@drawable/btn_background_blue"
+        android:text="开始" />
 
     <Button
         android:id="@+id/test_btn_stop"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="设置文本"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/btn_background_blue" />
+        android:layout_marginTop="20dp"
+        android:background="@drawable/btn_background_blue"
+        android:text="设置文本" />
+
     <Button
         android:id="@+id/test_btn_background"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="设置底色"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/btn_background_blue" />
+        android:layout_marginTop="20dp"
+        android:background="@drawable/btn_background_blue"
+        android:text="设置底色" />
+
+
 </LinearLayout>

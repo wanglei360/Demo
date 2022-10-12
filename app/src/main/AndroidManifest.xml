@@ -53,6 +53,7 @@
         <activity android:name="com.ntrade.map.BaiduActivity" />
         <activity android:name="com.ntrade.map.SystemServiceLocationActivity" />
         <activity android:name=".activity.HandicapActivity" />
+        <activity android:name=".activity.EraserActivity" />
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"

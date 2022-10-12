@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.*
 import com.ntrade.demo.R
+import com.ntrade.demo.tool.PaintUtils
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.abs
@@ -46,6 +47,7 @@ class PancakeView : View {
     private var splitLineWidth = 10f//分割线的宽度
     private var mAnimValue = 0f
 
+    private val paintUtils by lazy { PaintUtils() }
     private val mDatas by lazy { ArrayList<PancakeData>() }
     private val splitLineDegrees by lazy { ArrayList<Float>() }
     private var angles: FloatArray? = null
@@ -412,7 +414,7 @@ class PancakeView : View {
                     calculatePosition(degreeTotal + 90 - newDegree / 2, radius + peripheralWidth)
 
                 val textWidth = textPaint.measureText(it.text)
-                val textHeight = measureHeight(textPaint)
+                val textHeight = paintUtils.measureHeight(textPaint)
                 val lineX = endCoordinate1!![0]
                 textLineEndX =
                     if (lineX > centerX) {
@@ -432,7 +434,7 @@ class PancakeView : View {
                     radius * 0.76f
                 ).also { coordinate ->
                     textX = coordinate[0] - textPaint.measureText(it.text) / 2
-                    textY = coordinate[1] + measureHeight(textPaint) / 2
+                    textY = coordinate[1] + paintUtils.measureHeight(textPaint) / 2
                 }
             }
 
@@ -466,16 +468,6 @@ class PancakeView : View {
     }
 
     private fun getColor(id: Int): Int = context.resources.getColor(id)
-
-    /**
-     * 获取要画的文本的高度
-     * todo 获取宽度可以直接用 TextView 的 Paint 调用measureText("字符串")
-     * todo textView.paint.measureText("字符串");
-     */
-    private fun measureHeight(paint: Paint): Int {
-        val fm = paint.fontMetricsInt
-        return fm.top.inv() - (fm.top.inv() - fm.ascent.inv()) - (fm.bottom - fm.descent)
-    }
 
     /**
      * @param color 线的颜色
