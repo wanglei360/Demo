@@ -53,26 +53,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingTop="20dp"
-                android:paddingBottom="20dp">
+                android:paddingTop="20dp">
 
                 <CheckBox
-                    android:id="@+id/anim_true"
+                    android:id="@+id/isStartAnim"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:checked="true"
-                    android:text="动画"
+                    android:text="是否有动画"
                     android:textColor="#000"
                     android:textSize="16sp" />
 
                 <CheckBox
-                    android:id="@+id/anim_false"
+                    android:id="@+id/isShowSplitLine"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:checked="false"
-                    android:text="非动画"
+                    android:text="是否显示分割线"
                     android:textColor="#000"
                     android:textSize="16sp" />
 
@@ -82,26 +81,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingTop="20dp"
-                android:paddingBottom="20dp">
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
                 <CheckBox
-                    android:id="@+id/show_text_line"
+                    android:id="@+id/pancakeIsShowLine"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:checked="true"
-                    android:text="显示连接线"
+                    android:text="是否显示连接线"
                     android:textColor="#000"
                     android:textSize="16sp" />
 
                 <CheckBox
-                    android:id="@+id/gone_text_line"
+                    android:id="@+id/isShowSmallCircular"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:checked="false"
-                    android:text="不显示连接线"
+                    android:text="是否显示中心小圆"
                     android:textColor="#000"
                     android:textSize="16sp" />
 
@@ -115,7 +114,7 @@
                 app:pancake_background_color="@color/color_caae7e"
                 app:pancake_is_show_line="true"
                 app:pancake_is_show_small_circular="true"
-                app:pancake_is_show_split_line="false"
+                app:pancake_is_show_split_line="true"
                 app:pancake_is_start_anim="true"
                 app:pancake_line_color="#1966ff"
                 app:pancake_text_color="#000" />

@@ -29,33 +29,26 @@ class PancakeActivity : Activity() {
                 }
             }
         }
-        binding.animTrue.setOnClickListener {
-            setIsStartAnim(it as CheckBox)
+        binding.isStartAnim.setOnCheckedChangeListener { compoundButton, b ->
+            binding.mPancakeView.isStartAnim = b//是否有动画
         }
-        binding.animFalse.setOnClickListener {
-            setIsStartAnim(it as CheckBox)
+        binding.isShowSplitLine.setOnCheckedChangeListener { compoundButton, b ->
+            binding.mPancakeView.isShowSplitLine = b//是否显示分割线
         }
-
-        binding.showTextLine.setOnClickListener {
-            setTextLine(it as CheckBox)
+        binding.pancakeIsShowLine.setOnCheckedChangeListener { compoundButton, b ->
+            binding.mPancakeView.pancakeIsShowLine = b//是否显示连接线
         }
-        binding.goneTextLine.setOnClickListener {
-            setTextLine(it as CheckBox)
+        binding.isShowSmallCircular.setOnCheckedChangeListener { compoundButton, b ->
+            binding.mPancakeView.isShowSmallCircular = b//是否显示中心小圆
         }
     }
 
-    private fun setTextLine(cb: CheckBox) {
-        binding.showTextLine.isChecked = false
-        binding.goneTextLine.isChecked = false
-        binding.mPancakeView.pancakeIsShowLine = cb == binding.showTextLine
-        cb.isChecked = true
-    }
-
-    private fun setIsStartAnim(animView: CheckBox) {
-        binding.animTrue.isChecked = false
-        binding.animFalse.isChecked = false
-        binding.mPancakeView.isStartAnim = animView == binding.animTrue
-        animView.isChecked = true
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        binding.isStartAnim.isChecked = binding.mPancakeView.isStartAnim
+        binding.isShowSplitLine.isChecked = binding.mPancakeView.isShowSplitLine
+        binding.pancakeIsShowLine.isChecked = binding.mPancakeView.pancakeIsShowLine
+        binding.isShowSmallCircular.isChecked = binding.mPancakeView.isShowSmallCircular
     }
 
     fun btnClick1(v: View) {

@@ -27,9 +27,9 @@ import kotlin.math.sin
  */
 class PancakeView : View {
 
-    private var isShowSplitLine = true
-     var pancakeIsShowLine = true//是否显示字和圆的连接线线
-    private var isShowSmallCircular = true
+    var isShowSplitLine = true // 是否显示分割线
+    var pancakeIsShowLine = true //是否显示字和圆的连接线线
+    var isShowSmallCircular = true // 是否显示中心小圆
     var isStartAnim = true
     private var mBackgroundColor = Color.parseColor("#ffffff")
     private var mTextColor = Color.parseColor("#000000")
@@ -51,6 +51,7 @@ class PancakeView : View {
     private val mDatas by lazy { ArrayList<PancakeData>() }
     private val splitLineDegrees by lazy { ArrayList<Float>() }
     private var angles: FloatArray? = null
+    private var foo: ((Boolean, Int) -> Unit)? = null
 
     private val linePaint by lazy {
         getPaint(mLineColor, 5, Paint.Style.FILL_AND_STROKE)
@@ -343,11 +344,6 @@ class PancakeView : View {
         }
     }
 
-    private var foo: ((Boolean, Int) -> Unit)? = null
-    fun setItemClickListener(foo: (Boolean, Int) -> Unit) {
-        this.foo = foo
-    }
-
     /**
      * 获取指定度数在外弧上的坐标
      * @param degree 旋转的度数
@@ -370,6 +366,19 @@ class PancakeView : View {
         position[0] = startX
         position[1] = startY
         return position
+    }
+
+    fun setItemClickListener(foo: (Boolean, Int) -> Unit) {
+        this.foo = foo
+    }
+
+    @JvmName("setDatas1")
+    fun setDatas(datas: ArrayList<Float>) {
+        ArrayList<Int>().also { list ->
+            datas.forEach {
+                list.add(it.toInt())
+            }
+        }
     }
 
     fun setDatas(datas: ArrayList<Int>) {
