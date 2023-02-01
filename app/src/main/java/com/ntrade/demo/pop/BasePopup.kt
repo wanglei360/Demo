@@ -23,10 +23,13 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
 
     // 默认设置pop的宽高都为wrap_content
     protected val mPopup: PopupWindow = PopupWindow(popParams.width, popParams.height)
+
     // 默认背景半透明数值为0.4f
     private var dim = 0.4f
+
     // 背景是否半透明
     private var isBgDim = false
+
     // 背景透明动画时间
     private var animDuration = 200L
 
@@ -39,7 +42,8 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
     init {
         mPopup.isFocusable = true
 
-        mPopup.contentView = LayoutInflater.from(popParams.activity).inflate(popParams.layoutRes, null)
+        mPopup.contentView =
+            LayoutInflater.from(popParams.activity).inflate(popParams.layoutRes, null)
         dim = popParams.dimValue
         isBgDim = popParams.isDim
 
@@ -63,12 +67,16 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
                         false
                     }
                 popParams.longClickView!!.get() is RecyclerView -> // 判断是不是RecyclerView 拦截点击事件获取坐标
-                    (popParams.longClickView!!.get() as RecyclerView).addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
+                    (popParams.longClickView!!.get() as RecyclerView).addOnItemTouchListener(object :
+                        RecyclerView.OnItemTouchListener {
                         override fun onTouchEvent(p0: RecyclerView, p1: MotionEvent) {
 
                         }
 
-                        override fun onInterceptTouchEvent(p0: RecyclerView, event: MotionEvent): Boolean {
+                        override fun onInterceptTouchEvent(
+                            p0: RecyclerView,
+                            event: MotionEvent
+                        ): Boolean {
                             when (event.action) {
                                 MotionEvent.ACTION_DOWN -> {
                                     clickLocation[0] = event.rawX
@@ -115,11 +123,17 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
 
                 if (event.action == MotionEvent.ACTION_DOWN && (x < 0 || x >= popupContentViewSize[0] || y < 0 || y >= popupContentViewSize[1])) {
                     //outside
-                    Log.d(TAG, "onTouch outside:mWidth=${popupContentViewSize[0]},mHeight=${popupContentViewSize[1]}")
+                    Log.d(
+                        TAG,
+                        "onTouch outside:mWidth=${popupContentViewSize[0]},mHeight=${popupContentViewSize[1]}"
+                    )
                     return@OnTouchListener true
                 } else if (event.action == MotionEvent.ACTION_OUTSIDE) {
                     //outside
-                    Log.d(TAG, "onTouch outside:mWidth=${popupContentViewSize[0]},mHeight=${popupContentViewSize[1]}")
+                    Log.d(
+                        TAG,
+                        "onTouch outside:mWidth=${popupContentViewSize[0]},mHeight=${popupContentViewSize[1]}"
+                    )
                     return@OnTouchListener true
                 }
                 false
@@ -294,20 +308,32 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
 
         when (direction) {
             WPopupDirection.LEFT -> {
-                result[0] = viewLocation[0] - popupContentViewSize[0] - Utils.dp2px(getContext(), popParams.commonPopMargin)
+                result[0] = viewLocation[0] - popupContentViewSize[0] - Utils.dp2px(
+                    getContext(),
+                    popParams.commonPopMargin
+                )
                 result[1] = viewLocation[1] + (viewHeight / 2) - (popupContentViewSize[1] / 2)
             }
             WPopupDirection.RIGHT -> {
-                result[0] = viewLocation[0] + viewWidth + Utils.dp2px(getContext(), popParams.commonPopMargin)
+                result[0] = viewLocation[0] + viewWidth + Utils.dp2px(
+                    getContext(),
+                    popParams.commonPopMargin
+                )
                 result[1] = viewLocation[1] + viewHeight / 2 - popupContentViewSize[1] / 2
             }
             WPopupDirection.BOTTOM -> {
                 result[0] = viewLocation[0] + viewWidth / 2 - popupContentViewSize[0] / 2
-                result[1] = viewLocation[1] + viewHeight + Utils.dp2px(getContext(), popParams.commonPopMargin)
+                result[1] = viewLocation[1] + viewHeight + Utils.dp2px(
+                    getContext(),
+                    popParams.commonPopMargin
+                )
             }
             WPopupDirection.TOP -> {
                 result[0] = viewLocation[0] + (viewWidth / 2) - popupContentViewSize[0] / 2
-                result[1] = viewLocation[1] - popupContentViewSize[1] - Utils.dp2px(getContext(), popParams.commonPopMargin)
+                result[1] = viewLocation[1] - popupContentViewSize[1] - Utils.dp2px(
+                    getContext(),
+                    popParams.commonPopMargin
+                )
             }
         }
 
@@ -474,19 +500,20 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
 
 
 
-                bgDimAnimator.addListener(object : Animator.AnimatorListener{
-                    override fun onAnimationRepeat(animation: Animator?) {
+                bgDimAnimator.addListener(object : Animator.AnimatorListener {
+
+                    override fun onAnimationStart(animation: Animator) {
                     }
 
-                    override fun onAnimationEnd(animation: Animator?) {
+                    override fun onAnimationEnd(animation: Animator) {
                         window = null
                         windowAttr = null
                     }
 
-                    override fun onAnimationCancel(animation: Animator?) {
+                    override fun onAnimationCancel(animation: Animator) {
                     }
 
-                    override fun onAnimationStart(animation: Animator?) {
+                    override fun onAnimationRepeat(animation: Animator) {
                     }
 
                 })
@@ -519,19 +546,33 @@ open class BasePopup(val popParams: WPopParams) : View.OnTouchListener {
                     window.attributes = windowAttr
                 }
 
-                clearBgDimAnimator.addListener(object : Animator.AnimatorListener{
-                    override fun onAnimationRepeat(animation: Animator?) {
+                clearBgDimAnimator.addListener(object : Animator.AnimatorListener {
+//                    override fun onAnimationRepeat(animation: Animator?) {
+//                    }
+//
+//                    override fun onAnimationEnd(animation: Animator?) {
+//                        window = null
+//                        windowAttr = null
+//                    }
+//
+//                    override fun onAnimationCancel(animation: Animator?) {
+//                    }
+//
+//                    override fun onAnimationStart(animation: Animator?) {
+//                    }
+
+                    override fun onAnimationStart(animation: Animator) {
                     }
 
-                    override fun onAnimationEnd(animation: Animator?) {
+                    override fun onAnimationEnd(animation: Animator) {
                         window = null
                         windowAttr = null
                     }
 
-                    override fun onAnimationCancel(animation: Animator?) {
+                    override fun onAnimationCancel(animation: Animator) {
                     }
 
-                    override fun onAnimationStart(animation: Animator?) {
+                    override fun onAnimationRepeat(animation: Animator) {
                     }
 
                 })

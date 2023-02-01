@@ -32,7 +32,9 @@ class MListAdapter(val list: ArrayList<String>, val onItemClickListener: (Int) -
             list[position].apply {
                 item_tv.text = this
             }
-            binding.root.setOnClickListener { onItemClickListener.invoke(position) }
+            binding.root.setOnClickListener {
+                onItemClickListener.invoke(position)
+            }
         }
     }
 

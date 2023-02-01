@@ -54,6 +54,7 @@
         <activity android:name="com.ntrade.map.SystemServiceLocationActivity" />
         <activity android:name=".activity.HandicapActivity" />
         <activity android:name=".activity.EraserActivity" />
+        <activity android:name=".activity.ColorGradientActivity" />
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"

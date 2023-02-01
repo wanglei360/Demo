@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
             add("地图")// 7
             add("盘口")// 8
             add("橡皮擦")// 9
+            add("颜色渐变")// 10
             binding.lv.adapter = MListAdapter(this) { position ->
                 when (position) {
                     0 -> goToActivity(ViewBindingActivity::class.java)
@@ -38,12 +39,13 @@ class MainActivity : AppCompatActivity() {
                     7 -> goToActivity(MapActivity::class.java)
                     8 -> goToActivity(HandicapActivity::class.java)
                     9 -> goToActivity(EraserActivity::class.java)
+                    10 -> goToActivity(ColorGradientActivity::class.java)
                 }
             }
         }
     }
 
-    fun goToActivity(cls: Class<*>, bundle: Bundle? = null) {
+    private fun goToActivity(cls: Class<*>, bundle: Bundle? = null) {
         Intent(this, cls).apply {
             bundle?.let {
                 putExtras(it)
